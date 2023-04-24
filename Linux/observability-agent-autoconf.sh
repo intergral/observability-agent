@@ -184,7 +184,7 @@ if ! which jq >/dev/null; then
 fi
 
 # Check if yq is installed to edit config
-if ! which jq >/dev/null; then
+if ! which yq >/dev/null; then
   if [ "$OS" = "macOS" ]; then
     sys="darwin"
   else
