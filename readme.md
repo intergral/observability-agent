@@ -22,7 +22,7 @@ for must be running on its default port, these are:
 ## Procedure
 ### Linux and Mac
 In a terminal, run:
-sudo path/to/grafana-agent-autoconf.sh
+sudo `path/to/grafana-agent-autoconf.sh`
 
 ### Windows
 In a terminal, run:
