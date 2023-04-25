@@ -11,7 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: navigate to correct folder
-        run: cd ./linux
-      - name: run makefile
+      - name: Run Makefile
+        working-directory: ./linux
         run: make
