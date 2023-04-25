@@ -1,5 +1,5 @@
 ## Introduction
-The Observability Agent autoconfiguration and installer tool is a wrapper for Grafana Agent (https://grafana.com/docs/agent/latest/) that can install the agent,
+The Observability Agent autoconfiguration and installer tool is a wrapper for the [Grafana Agent](https://grafana.com/docs/agent/latest/) that can install the agent,
 detect which services are running on your machine, and automatically create a configuration file with integrations for
 detected services. A Node/Windows exporter integration will be added by default.
 
