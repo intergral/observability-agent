@@ -1,5 +1,6 @@
 AGENT_IMAGE ?= intergral/grafana/agent:main
-PLATFORMS := amd64 arm64 ppc64le
+PLATFORMS := amd64
+#arm64 ppc64le
 
 agent-images:
 	@for platform in $(PLATFORMS); do \
