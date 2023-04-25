@@ -1,17 +1,11 @@
 ## Introduction
-The autoconfiguration and installer tool for Grafana Agent is a wrapper for Grafana Agent that can install the agent,
+The Observability Agent autoconfiguration and installer tool is a wrapper for Grafana Agent (https://grafana.com/docs/agent/latest/) that can install the agent,
 detect which services are running on your machine, and automatically create a configuration file with integrations for
 detected services. A Node/Windows exporter integration will be added by default.
 
 ## Prerequisites
 For Unix machines, the script will have to be run with root privileges, otherwise you will be prompted for your password during execution.
-Windows machines must have Powershell 5.1 or later installed.
-
-On macOS, curl, tar, iproute2mac and jq must be pre-installed (curl and tar are likely already installed). The install commands for these tools are:
-brew install curl
-brew install tar
-brew install iproute2mac
-brew install jq
+Windows machines must have Powershell 5.1 or later installed. macOS is not currently supported.
 
 The script will automatically detect what's running on your machine and add integrations to the config file. For this, each service you want to have an integration
 for must be running on its default port, these are:
@@ -20,9 +14,9 @@ for must be running on its default port, these are:
 - Postgres - 5432
 
 ## Procedure
-### Linux and Mac
+### Linux
 In a terminal, run:
-sudo `path/to/grafana-agent-autoconf.sh`
+sudo path/to/grafana-agent-autoconf.sh
 
 ### Windows
 In a terminal, run:
@@ -30,7 +24,7 @@ path/to/grafana-agent-autoconf.ps1
 
 ### Docker
 When running in Docker, you will not be prompted for any information. Therefore, you must specify an api key before running. Additionally, you must set the relevant
-environment variables, for whichever services you have running, so they can be configured. 
+environment variables for whichever services you have running, so they can be configured.
 
 To set the api key the following environment variable must be set:
 - fr_api_key
@@ -45,9 +39,9 @@ Example for setting environment variables individually:
 `docker run --env fr_api_key=1234567890 --env log_collection=true --env service_name=service --env log_path=path docker.io/grafana/agent:main-amd64`
 
 Example for setting environment variables using an env file:
-`docker run --env-file ./env.list docker.io/grafana/agent:main-amd64`
+`docker run --env-file env.list docker.io/intergral/grafana/agent:main-amd64`
 
-For more information please visit the [docker documentation](https://docs.docker.com/engine/reference/commandline/run/#env) 
+For more information please visit the [docker documentation](https://docs.docker.com/engine/reference/commandline/run/#env)
 
 ### Options
 Agent installation is enabled by default. To run without installing the agent, add " --install false" to the end of the run command. For example:  
