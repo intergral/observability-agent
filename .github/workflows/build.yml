@@ -7,10 +7,17 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  build-amd64:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Run Makefile
         working-directory: ./linux
-        run: make
+        run: make amd64-image
+  build-arm64:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run Makefile
+        working-directory: ./linux
+        run: make other-images
