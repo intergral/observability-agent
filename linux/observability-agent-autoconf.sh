@@ -289,7 +289,14 @@ if [ -z "${fr_api_key}" ]; then
       read -r key
   fi
 else
+  echo "API key found"
   key="${fr_api_key}"
+fi
+
+if [ -n "${fr_metrics_endpoint}" ]; then
+  metricsEndpoint="$fr_metrics_endpoint"
+else
+  metricsEndpoint="https://api.fusionreactor.io/v1/metrics"
 fi
 
 # Create config file
@@ -300,7 +307,7 @@ metrics:
   global:
     scrape_interval: 1m
     remote_write:
-      - url: https://api.fusionreactor.io/v1/metrics
+      - url: $metricsEndpoint
         authorization:
           credentials: $key
 integrations:
@@ -343,9 +350,15 @@ while true; do
       echo "Log path not set"
     fi
 
+    if [ -n "${fr_logs_endpoint}" ]; then
+      logsEndpoint="$fr_logs_endpoint"
+    else
+      logsEndpoint="https://api.fusionreactor.io/v1/logs"
+    fi
+
     # Add log collection
     yq -i e '.logs.configs = [{"name": "default", "positions": {"filename": "/tmp/positions.yaml"},
-    "clients": [{"url": "https://api.fusionreactor.io/v1/logs", "authorization": {"credentials": "'"$key"'"}}],
+    "clients": [{"url": "'"$logsEndpoint"'", "authorization": {"credentials": "'"$key"'"}}],
     "scrape_configs": [{"job_name": "'"$job"'", "static_configs": [{"targets": ["'"$key"'"], "labels": {"job": "'"$job"'", "host": "localhost", "__path__": "'"$path"'"}}]}]}]' "$CONFIG"
     break
   elif [ "$ans" = "n" ]; then

@@ -74,14 +74,25 @@ if (($CONFIG) -and (Test-Path $CONFIG -PathType Leaf)) {
 }
 
 # Get API key
-if (-not $env:fr_api_key) {
+if ($env:fr_api_key) {
+    Write-Host "API key found"
+    $key = $env:fr_api_key
+}
+else {
     # Prompt for API key
     Write-Host "API key not found"
     $key = Read-Host "Enter your API key"
 }
-else {
-    Write-Host "API key found"
-    $key = $env:fr_api_key
+
+if ($env:fr_metrics_endpoint)
+{
+    $metricsEndpoint = $env:fr_metrics_endpoint
+    Write-Host "YES"
+}
+else
+{
+    $metricsEndpoint = "https://api.fusionreactor.io/v1/metrics"
+    Write-Host "NO"
 }
 
 # Create config file
@@ -92,7 +103,7 @@ metrics:
   global:
     scrape_interval: 1m
     remote_write:
-      - url: https://api.fusionreactor.io/v1/metrics
+      - url: '$metricsEndpoint'
         authorization:
           credentials: '$key'
 integrations:
@@ -113,6 +124,15 @@ while ($true) {
         $path = Read-Host "Enter the service name"
         $job = Read-Host "Enter the path to the log file"
 
+        if ($env:fr_logs_endpoint)
+        {
+            $logsEndpoint=$env:fr_logs_endpoint
+        }
+        else
+        {
+            $logsEndpoint="https://api.fusionreactor.io/v1/logs"
+        }
+
         # Add log collection
         $logContent = @"
 logs:
@@ -121,7 +141,7 @@ logs:
       positions:
         filename: /tmp/positions.yaml
       clients:
-        - url: https://api.fusionreactor.io/v1/logs
+        - url: '$logsEndpoint'
           authorization:
             credentials: '$key'
       scrape_configs:
@@ -135,7 +155,6 @@ logs:
                 __path__: '$path'
 "@
         $logContent | Out-File -FilePath $CONFIG -Append
-        Write-Output "Logs done"
         break
     } elseif ($ans -eq "n") {
         break
