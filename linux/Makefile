@@ -1,7 +1,5 @@
 AGENT_IMAGE ?= intergral/grafana/agent:main
 
-PLATFORMS := arm64 ppc64le
-
 amd64-image:
 	echo "Building image for amd64 platform..."; \
 	DOCKER_BUILDKIT=1 docker build --no-cache --progress=plain $(DOCKER_FLAGS) \
@@ -9,11 +7,16 @@ amd64-image:
 		-t $(AGENT_IMAGE)-amd64 \
 		-f ./Dockerfile . ; \
 
-other-images:
-	@for platform in $(PLATFORMS); do \
-		echo "Building image for $$platform platform..."; \
-		DOCKER_BUILDKIT=1 docker build --no-cache --progress=plain $(DOCKER_FLAGS) \
-			--build-arg PLATFORM=$$platform \
-			-t $(AGENT_IMAGE)-$$platform \
-			-f ./Dockerfile . ; \
-	done
+ppc64le-image:
+	echo "Building image for ppc64le platform..."; \
+	DOCKER_BUILDKIT=1 docker build --no-cache --progress=plain $(DOCKER_FLAGS) \
+		--build-arg PLATFORM=ppc64le \
+		-t $(AGENT_IMAGE)-ppc64le \
+		-f ./Dockerfile . ; \
+
+arm64-image:
+	echo "Building image for arm64 platform..."; \
+	DOCKER_BUILDKIT=1 docker build --no-cache --progress=plain $(DOCKER_FLAGS) \
+		--build-arg PLATFORM=arm64 \
+		-t $(AGENT_IMAGE)-arm64 \
+		-f ./Dockerfile . ; \

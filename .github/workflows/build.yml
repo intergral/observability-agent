@@ -14,10 +14,17 @@ jobs:
       - name: Run Makefile
         working-directory: ./linux
         run: make amd64-image
+  build-ppc64le:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run Makefile
+        working-directory: ./linux
+        run: make ppc64le-image
   build-arm64:
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v3
       - name: Run Makefile
         working-directory: ./linux
-        run: sudo make other-images
+        run: make arm64-image
