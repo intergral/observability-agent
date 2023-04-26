@@ -23,7 +23,6 @@ jobs:
       - name: Install Docker buildx
         run: brew install docker-buildx
       - name: Set up Docker Buildx
-        id: buildx
         uses: docker/setup-buildx-action@v2
       - name: Run Makefile
         working-directory: ./linux
