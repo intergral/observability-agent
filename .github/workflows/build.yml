@@ -20,11 +20,11 @@ jobs:
       - uses: actions/checkout@v3
       - name: Run Makefile
         working-directory: ./linux
-        run: make ppc64le-image
+        run: sudo make ppc64le-image
   build-arm64:
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v3
       - name: Run Makefile
         working-directory: ./linux
-        run: make arm64-image
+        run: sudo make arm64-image
