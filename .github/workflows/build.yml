@@ -20,4 +20,4 @@ jobs:
       - uses: actions/checkout@v3
       - name: Run Makefile
         working-directory: ./linux
-        run: sudo make other-images
+        run: make other-images
