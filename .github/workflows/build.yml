@@ -21,9 +21,7 @@ jobs:
       - name: Install Docker
         run: brew install docker
       - name: Install Docker buildx
-        run: | 
-          brew install docker-buildx
-          docker buildx install
+        run: brew install docker-buildx
       - name: Run Docker
         run: colima start
 #      - name: Start Docker daemon
