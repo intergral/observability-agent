@@ -71,10 +71,8 @@ elif [ -f /etc/SuSE-release ] || [ "$DISTRIBUTION" = "SUSE" ] || [ "$DISTRIBUTIO
 elif [ -x "$(command -v sw_vers)" ] || [ "$DISTRIBUTION" = "Darwin" ]; then
   OS="macOS"
   echo "Mac not currently supported"
-  exit 1
 else
   echo "Distribution not supported"
-  exit 1
 fi
 echo "$DISTRIBUTION detected"
 
@@ -83,20 +81,15 @@ if [ "$(uname -m)" = "x86_64" ]; then
   ARCH=amd64
 elif [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then
   ARCH=arm64
-elif [ "$(uname -m)" = "armv6l" ] || [ "$(uname -m)" = "armv6" ]; then
+elif [ "$(uname -m)" = "armv6l" ] || [ "$(uname -m)" = "armv6" ] && [ $OS != "macOS" ]; then
   ARCH=armv6
-elif [ "$(uname -m)" = "armv7l" ] || [ "$(uname -m)" = "armv7" ]; then
+elif [ "$(uname -m)" = "armv7l" ] || [ "$(uname -m)" = "armv7" ] && [ $OS != "macOS" ]; then
   ARCH=armv7
 else
   ARCH=unsupported
 fi
 
-# Only amd64 and arm64 available for mac
-if { [ $ARCH = armv6 ] || [ $ARCH = armv6 ]; } && [ $OS = "macOS" ]; then
-  ARCH=unsupported
-fi
-
-# Bootstrap
+# Bootstrap dependencies
 # Update the package manager
 if [ "$OS" = "Debian" ]; then
   apt update
@@ -134,7 +127,7 @@ if ! which tar >/dev/null; then
     elif [ "$OS" = "SUSE" ]; then
       zypper -y install tar
     elif [ "$OS" = "macOS" ]; then
-      echo "iproute2mac required"
+      echo "tar required"
       exit 1
     else
       echo "OS not supported"
@@ -144,7 +137,7 @@ fi
 
 # Check if iproute2 is installed (required for ss command)
 if [ "$OS" = "macOS" ]; then
-  if ! which iproute2mac >/dev/null; then
+  if ! which ss >/dev/null; then
     echo "iproute2mac required"
     exit 1
   fi
@@ -389,7 +382,7 @@ if (ss -ltn | grep -qE :3306) || [ -n "${fr_mysql_connection_string}" ]; then
           fi
       done
       yq -i e '.integrations.mysqld_exporter.enabled |= true, .integrations.mysqld_exporter.data_source_name |= "'"$user"':'"$pass"'@(127.0.0.1:3306)/"' "$CONFIG"
-    elif "${fr_mysql_user}" && "${fr_mysql_password}"; then
+    elif [ "${fr_mysql_user}" ] && [ "${fr_mysql_password}" ]; then
       echo "MySQL credentials found"
       yq -i e '.integrations.mysqld_exporter.enabled |= true, .integrations.mysqld_exporter.data_source_name |= "'"${fr_mysql_user}"':'"${fr_mysql_password}"'@(127.0.0.1:3306)/"' "$CONFIG"
     else
@@ -434,7 +427,7 @@ if (ss -ltn | grep -qE :1433) || [ -n "${fr_mssql_connection_string}" ]; then
           fi
       done
       yq -i e '.integrations.mssql.enabled |= true, .integrations.mssql.connection_string |= "sqlserver://'"$user"':'"$pass"'@1433:1433" | .integrations.mssql.connection_string style="double"' "$CONFIG"
-    elif "${fr_mssql_user}" && "${fr_mssql_password}"; then
+    elif [ "${fr_mssql_user}" ] && [ "${fr_mssql_password}" ]; then
       echo "MSSQL credentials found";
       yq -i e '.integrations.mssql.enabled |= true, .integrations.mssql.connection_string |= "sqlserver://'"${fr_mssql_user}"':'"${fr_mssql_password}"'@1433:1433" | .integrations.mssql.connection_string style="double"' "$CONFIG"
     else
@@ -479,7 +472,7 @@ if (ss -ltn | grep -qE :5432) || [ -n "${fr_postgres_connection_string}" ]; then
           fi
       done
       yq -i e '.integrations.postgres_exporter.enabled |= true, .integrations.postgres_exporter.data_source_names |= ["postgresql://'"$user"':'"$pass"'@127.0.0.1:5432/shop?sslmode=disable"] | .integrations.postgres_exporter.data_source_names[0] style="double"' "$CONFIG"
-    elif "${fr_postgres_user}" && "${fr_postgres_password}"; then
+    elif [ "${fr_postgres_user}" ] && [ "${fr_postgres_password}" ]; then
       echo "Postgres credentials found";
       yq -i e '.integrations.postgres_exporter.enabled |= true, .integrations.postgres_exporter.data_source_names |= ["postgresql://'"${fr_postgres_user}"':'"${fr_postgres_password}"'@127.0.0.1:5432/shop?sslmode=disable"] | .integrations.postgres_exporter.data_source_names[0] style="double"' "$CONFIG"
     else
