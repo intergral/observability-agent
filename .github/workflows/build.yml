@@ -29,8 +29,10 @@ jobs:
       - name: Run Makefile
         working-directory: ./linux
         run: sudo make arm64-image
+      - name: Fix Docker Permissions
+        run: sudo chmod 666 /var/run/docker.sock
       - name: Log in to Docker Hub
-        uses: sudo docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
