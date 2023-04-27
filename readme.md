@@ -16,11 +16,11 @@ for must be running on its default port, these are:
 ## Procedure
 ### Linux
 In a terminal, run:
-sudo path/to/grafana-agent-autoconf.sh
+sudo path/to/observability-agent-autoconf.sh
 
 ### Windows
 In a terminal, run:
-path/to/grafana-agent-autoconf.ps1
+path/to/observability-agent-autoconf.ps1
 
 ### Docker
 When running in Docker, you will not be prompted for any information. Therefore, you must specify an api key before running. Additionally, you must set the relevant

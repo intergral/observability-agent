@@ -402,7 +402,7 @@ if (ss -ltn | grep -qE :3306) || [ -n "${fr_mysql_connection_string}" ]; then
           fi
       done
       yq -i e '.integrations.mysqld_exporter.enabled |= true, .integrations.mysqld_exporter.data_source_name |= "'"$user"':'"$pass"'@(127.0.0.1:3306)/"' "$CONFIG"
-    elif "${fr_mysql_user}" && "${fr_mysql_password}"; then
+    elif [ "${fr_mysql_user}" ] && [ "${fr_mysql_password}" ]; then
       echo "MySQL credentials found"
       yq -i e '.integrations.mysqld_exporter.enabled |= true, .integrations.mysqld_exporter.data_source_name |= "'"${fr_mysql_user}"':'"${fr_mysql_password}"'@(127.0.0.1:3306)/"' "$CONFIG"
     else
@@ -447,7 +447,7 @@ if (ss -ltn | grep -qE :1433) || [ -n "${fr_mssql_connection_string}" ]; then
           fi
       done
       yq -i e '.integrations.mssql.enabled |= true, .integrations.mssql.connection_string |= "sqlserver://'"$user"':'"$pass"'@1433:1433" | .integrations.mssql.connection_string style="double"' "$CONFIG"
-    elif "${fr_mssql_user}" && "${fr_mssql_password}"; then
+    elif [ "${fr_mssql_user}" ] && [ "${fr_mssql_password}" ]; then
       echo "MSSQL credentials found";
       yq -i e '.integrations.mssql.enabled |= true, .integrations.mssql.connection_string |= "sqlserver://'"${fr_mssql_user}"':'"${fr_mssql_password}"'@1433:1433" | .integrations.mssql.connection_string style="double"' "$CONFIG"
     else
@@ -492,7 +492,7 @@ if (ss -ltn | grep -qE :5432) || [ -n "${fr_postgres_connection_string}" ]; then
           fi
       done
       yq -i e '.integrations.postgres_exporter.enabled |= true, .integrations.postgres_exporter.data_source_names |= ["postgresql://'"$user"':'"$pass"'@127.0.0.1:5432/shop?sslmode=disable"] | .integrations.postgres_exporter.data_source_names[0] style="double"' "$CONFIG"
-    elif "${fr_postgres_user}" && "${fr_postgres_password}"; then
+    elif [ "${fr_postgres_user}" ] && [ "${fr_postgres_password}" ]; then
       echo "Postgres credentials found";
       yq -i e '.integrations.postgres_exporter.enabled |= true, .integrations.postgres_exporter.data_source_names |= ["postgresql://'"${fr_postgres_user}"':'"${fr_postgres_password}"'@127.0.0.1:5432/shop?sslmode=disable"] | .integrations.postgres_exporter.data_source_names[0] style="double"' "$CONFIG"
     else
