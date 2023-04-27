@@ -70,7 +70,6 @@ elif [ -f /etc/SuSE-release ] || [ "$DISTRIBUTION" = "SUSE" ] || [ "$DISTRIBUTIO
 # Mac doesn't have a release file
 elif [ -x "$(command -v sw_vers)" ] || [ "$DISTRIBUTION" = "Darwin" ]; then
   OS="macOS"
-  echo "Mac not currently supported"
 else
   echo "Distribution not supported"
 fi
@@ -89,7 +88,7 @@ else
   ARCH=unsupported
 fi
 
-# Bootstrap dependencies
+# Bootstrap
 # Update the package manager
 if [ "$OS" = "Debian" ]; then
   apt update
