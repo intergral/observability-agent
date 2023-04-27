@@ -30,9 +30,9 @@ jobs:
         working-directory: ./linux
         run: sudo make arm64-image
       - name: Log in to Docker Hub
-        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+        uses: sudo docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
       - name: Docker Push
-        run: docker push docker.io/intergralgmbh/observability-agent:latest
+        run: sudo docker push docker.io/intergralgmbh/observability-agent:latest
