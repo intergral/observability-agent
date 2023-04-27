@@ -11,30 +11,32 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Run Makefile
-        working-directory: ./linux
-        run: make amd64-image
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v2
       - name: Log in to Docker Hub
         uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-      - name: Docker Push
-        run: docker push docker.io/intergralgmbh/observability-agent:latest
+      - name: Build Images
+        working-directory: ./linux
+        run: docker buildx build --platform linux/amd64,linux/arm64 -t intergralgmbh/observability-agent:latest --push .
 
-  build-arm64:
-    runs-on: self-hosted
-    steps:
-      - uses: actions/checkout@v3
-      - name: Run Makefile
-        working-directory: ./linux
-        run: sudo make arm64-image
-      - name: Fix Docker Permissions
-        run: sudo chmod 666 /var/run/docker.sock
-      - name: Log in to Docker Hub
-        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-      - name: Docker Push
-        run: docker push docker.io/intergralgmbh/observability-agent:latest
+
+#  build-arm64:
+#    runs-on: self-hosted
+#    steps:
+#      - uses: actions/checkout@v3
+#      - name: Run Makefile
+#        working-directory: ./linux
+#        run: sudo make arm64-image
+#      - name: Fix Docker Permissions
+#        run: sudo chmod 666 /var/run/docker.sock
+#      - name: Log in to Docker Hub
+#        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+#        with:
+#          username: ${{ secrets.DOCKER_USERNAME }}
+#          password: ${{ secrets.DOCKER_PASSWORD }}
+#      - name: Docker Push
+#        run: docker push docker.io/intergralgmbh/observability-agent:latest
