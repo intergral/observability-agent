@@ -7,7 +7,7 @@ RUN chmod +x observability-agent-autoconf.sh
 ADD run.sh .
 RUN chmod +x run.sh
 
-FROM --platform=${PLATFORM} grafana/agent:main
+FROM --platform grafana/agent:main
 
 COPY --from=builder observability-agent-autoconf.sh .
 COPY --from=builder run.sh .
