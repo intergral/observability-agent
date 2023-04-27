@@ -39,7 +39,7 @@ Example for setting environment variables individually:
 `docker run --env fr_api_key=1234567890 --env log_collection=true --env service_name=service --env log_path=path docker.io/grafana/agent:main-amd64`
 
 Example for setting environment variables using an env file:
-`docker run --env-file env.list docker.io/intergral/grafana/agent:main-amd64`
+`docker run --env-file env.list docker.io//grafana/agent:main-amd64`
 
 For more information please visit the [docker documentation](https://docs.docker.com/engine/reference/commandline/run/#env)
 
