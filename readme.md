@@ -16,7 +16,7 @@ for must be running on its default port, these are:
 ## Procedure
 ### Linux
 In a terminal, run:
-sudo path/to/observability-agent-autoconf.sh
+sudo  /bin/bash path/to/observability-agent-autoconf.sh
 
 ### Windows
 In a terminal, run:
