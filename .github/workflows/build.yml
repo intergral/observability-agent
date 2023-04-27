@@ -20,7 +20,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
       - name: Docker Push
-        run: docker push docker.io/intergralgmbh/observability-agent:x64
+        run: docker push docker.io/intergralgmbh/observability-agent:latest
 
   build-arm64:
     runs-on: self-hosted
@@ -37,10 +37,4 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
       - name: Docker Push
-        run: docker push docker.io/intergralgmbh/observability-agent:arm
-      - name: Docker Manifest
-        run: |
-          docker manifest create docker.io/intergralgmbh/observability-agent:latest 
-          --amend docker.io/intergralgmbh/observability-agent:x64
-          --amend docker.io/intergralgmbh/observability-agent:arm
-          docker manifest push docker.io/intergralgmbh/observability-agent:latest
+        run: docker push docker.io/intergralgmbh/observability-agent:latest
