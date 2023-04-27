@@ -100,12 +100,14 @@ fi
 
 # Check if curl is installed
 if ! which curl >/dev/null; then
-    echo "Installing curl..."
     if [ "$OS" = "Debian" ]; then
+      echo "Installing curl..."
       apt -y install curl
     elif [ "$OS" = "RedHat" ]; then
+      echo "Installing curl..."
       yum -y install curl
     elif [ "$OS" = "SUSE" ]; then
+      echo "Installing curl..."
       zypper -y install curl
     elif [ "$OS" = "macOS" ]; then
       echo "curl required"
@@ -118,12 +120,14 @@ fi
 
 # Check if tar is installed
 if ! which tar >/dev/null; then
-    echo "Installing tar..."
     if [ "$OS" = "Debian" ]; then
+      echo "Installing tar..."
       apt -y install tar
     elif [ "$OS" = "RedHat" ]; then
+      echo "Installing tar..."
       yum -y install tar
     elif [ "$OS" = "SUSE" ]; then
+      echo "Installing tar..."
       zypper -y install tar
     elif [ "$OS" = "macOS" ]; then
       echo "tar required"
@@ -135,36 +139,35 @@ if ! which tar >/dev/null; then
 fi
 
 # Check if iproute2 is installed (required for ss command)
-if [ "$OS" = "macOS" ]; then
-  if ! which ss >/dev/null; then
-    echo "iproute2mac required"
-    exit 1
-  fi
-else
-  if ! which ss >/dev/null; then
+if ! which ss >/dev/null; then
+    if [ "$OS" = "Debian" ]; then
       echo "Installing iproute2..."
-      if [ "$OS" = "Debian" ]; then
-        apt -y install iproute2
-      elif [ "$OS" = "RedHat" ]; then
-        yum -y install iproute2
-      elif [ "$OS" = "SUSE" ]; then
-        zypper -y install iproute2
-      else
-        echo "OS not supported"
-        exit 1
-      fi
-  fi
+      apt -y install iproute2
+    elif [ "$OS" = "RedHat" ]; then
+      echo "Installing iproute2..."
+      yum -y install iproute2
+    elif [ "$OS" = "SUSE" ]; then
+      echo "Installing iproute2..."
+      zypper -y install iproute2
+    elif [ "$OS" = "macOS" ]; then
+      echo "iproute2mac required"
+      exit 1
+    else
+      echo "OS not supported"
+      exit 1
+    fi
 fi
-
 
 # Check if jq is installed
 if ! which jq >/dev/null; then
-    echo "Installing jq..."
     if [ "$OS" = "Debian" ]; then
+      echo "Installing jq..."
       apt -y install jq
     elif [ "$OS" = "RedHat" ]; then
+      echo "Installing jq..."
       yum -y install jq
     elif [ "$OS" = "SUSE" ]; then
+      echo "Installing jq..."
       zypper -y install jq
     elif [ "$OS" = "macOS" ]; then
       echo "jq required"
