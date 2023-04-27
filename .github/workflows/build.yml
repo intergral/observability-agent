@@ -37,4 +37,4 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
       - name: Docker Push
-        run: sudo docker push docker.io/intergralgmbh/observability-agent:latest
+        run: docker push docker.io/intergralgmbh/observability-agent:latest
