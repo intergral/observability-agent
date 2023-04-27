@@ -18,8 +18,8 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Install Docker
-        run: brew install colima
+#      - name: Install Docker
+#        run: brew install colima
       - name: Run Docker
         run: colima start
 #      - name: Install Docker buildx
