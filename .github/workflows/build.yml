@@ -14,10 +14,27 @@ jobs:
       - name: Run Makefile
         working-directory: ./linux
         run: make amd64-image
+#  build-ppc64le:
+#    runs-on: macos-latest
+#    steps:
+#      - uses: actions/checkout@v3
+#      - name: Install Docker
+#        run: brew install docker
+##      - name: Install Docker buildx
+##        run: brew install docker-buildx
+#      - name: Run Docker
+#        run: colima start
+##      - name: Start Docker daemon
+##        run: brew services start docker
+#      - name: Set up Docker Buildx
+#        uses: docker/setup-buildx-action@v2
+#      - name: Run Makefile
+#        working-directory: ./linux
+#        run: sudo make ppc64le-image
   build-arm64:
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v3
       - name: Run Makefile
         working-directory: ./linux
-        run: make other-images
+        run: sudo make arm64-image
