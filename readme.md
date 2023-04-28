@@ -43,10 +43,10 @@ or </br>
 When running in Docker, you will not be prompted for any information. Therefore, you must specify an api key before running. Additionally, you must set the relevant
 environment variables for whichever services you have running, so they can be configured. These environment variables can be found in the [Environment Variables](#environment-variables) section
 
-> ⚠️ The agent will not ship to FusionReactor without setting the `fr_api_key` variable
+> ⚠️ The agent will not ship to FusionReactor without setting the `api_key` variable
 
 Example for setting environment variables individually: </br>
-`docker run --env fr_api_key=1234567890 --env fr_log_collection=true --env fr_service_name=service --env fr_log_path=path intergralgmbh/observability-agent:latest`
+`docker run --env api_key=1234567890 --env log_collection=true --env service_name=service --env log_path=path intergralgmbh/observability-agent:latest`
 
 Example for setting environment variables using an env file: </br>
 `docker run --env-file env.list intergralgmbh/observability-agent:latest`
@@ -59,10 +59,10 @@ services:
   agent:
     image: intergralgmbh/observability-agent:latest
     environment:
-      - fr_api_key=1234567890
-      - fr_log_collection=true
-      - fr_service_name=service
-      - fr_log_path=path
+      - api_key=1234567890
+      - log_collection=true
+      - service_name=service
+      - log_path=path
 ```
 
 For more information please visit the [Docker documentation](https://docs.docker.com/engine/reference/commandline/run/#env)
@@ -72,21 +72,21 @@ To add integrations without being prompted for credentials, there are several en
 
 | Variable               | Type     |
 |------------------------|----------|
-| `fr_api_key`           | `string` |
-| `fr_mysql_user`        | `string` |
-| `fr_mysql_password`    | `string` |
-| `fr_mssql_user`        | `string` |
-| `fr_mssql_password`    | `string` |
-| `fr_postgres_user`     | `string` |
-| `fr_postgres_password` | `string` |
+| `api_key`           | `string` |
+| `mysql_user`        | `string` |
+| `mysql_password`    | `string` |
+| `mssql_user`        | `string` |
+| `mssql_password`    | `string` |
+| `postgres_user`     | `string` |
+| `postgres_password` | `string` |
 
 If you wish to enable log collection, the following environment variables must be set:
 
 | Variable            | Type     |
 |---------------------|----------|
-| `fr_log_collection` | `bool`   |
-| `fr_service_name`   | `string` |
-| `fr_log_path`       | `string` |
+| `log_collection` | `bool`   |
+| `service_name`   | `string` |
+| `log_path`       | `string` |
 
 The default connection strings used in the config file are:
 
@@ -100,18 +100,18 @@ To replace these with a custom connection string, there are several environment 
 
 | Variable                        | Type     |
 |---------------------------------|----------|
-| `fr_mysql_connection_string`    | `string` |
-| `fr_mssql_connection_string`    | `string` |
-| `fr_postgres_connection_string` | `string` |
+| `mysql_connection_string`    | `string` |
+| `mssql_connection_string`    | `string` |
+| `postgres_connection_string` | `string` |
 
 If there is a service running that you don't want to enable the integration for, you can use the relevant environment variable from the following options
 to disable it by default when creating the configuration:
 
 | Variable               | Type   |
 |------------------------|--------|
-| `fr_mysql_disabled`    | `bool` |
-| `fr_mssql_disabled`    | `bool` |
-| `fr_postgres_disabled` | `bool` |
+| `mysql_disabled`    | `bool` |
+| `mssql_disabled`    | `bool` |
+| `postgres_disabled` | `bool` |
 
 If you wish to use an environment file to set environment variables, rather than setting them as system environment variables,
 you can do so by naming the file ".env" and placing it in the same directory as the "observability-agent-autoconf" script.
