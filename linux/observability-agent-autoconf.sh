@@ -281,7 +281,7 @@ else
 fi
 
 # Get API key
-if [ -z "${fr_api_key}" ]; then
+if [ -z "${api_key}" ]; then
   echo "API key not found"
   if [ "$PROMPT" != false ]; then
       # Prompt for API key
@@ -290,7 +290,7 @@ if [ -z "${fr_api_key}" ]; then
   fi
 else
   echo "API key found"
-  key="${fr_api_key}"
+  key="${api_key}"
 fi
 
 if [ -z "$key" ]; then
@@ -298,8 +298,8 @@ if [ -z "$key" ]; then
   exit 1
 fi
 
-if [ -n "${fr_metrics_endpoint}" ]; then
-  metricsEndpoint="$fr_metrics_endpoint"
+if [ -n "${metrics_endpoint}" ]; then
+  metricsEndpoint="$metrics_endpoint"
 else
   metricsEndpoint="https://api.fusionreactor.io/v1/metrics"
 fi
@@ -326,37 +326,37 @@ integrations:
 EOF
 
 while true; do
-    if [ "$PROMPT" != false ] && [ -z "${fr_log_collection}" ]; then
+    if [ "$PROMPT" != false ] && [ -z "${log_collection}" ]; then
       echo "Is there a service you want to enable log collection for? (y/n)"
       read -r ans
       ans=${ans,,}
-    elif [ "${fr_log_collection}" = true ]; then
+    elif [ "${log_collection}" = true ]; then
       ans="y"
     else
       ans="n"
     fi
 
   if [ "$ans" = "y" ]; then
-    if [ "$PROMPT" != false ] && [ -z "${fr_service_name}" ]; then
+    if [ "$PROMPT" != false ] && [ -z "${service_name}" ]; then
       echo "Enter the service name: "
       read -r job
-    elif [ -n "${fr_service_name}" ]; then
-      job="${fr_service_name}"
+    elif [ -n "${service_name}" ]; then
+      job="${service_name}"
     else
       echo "Service name not set"
     fi
 
-    if [ "$PROMPT" != false ] && [ -z "${fr_log_path}" ]; then
+    if [ "$PROMPT" != false ] && [ -z "${log_path}" ]; then
       echo "Enter the path to the log file: "
       read -r path
-    elif [ -n "${fr_log_path}" ]; then
-      path="${fr_log_path}"
+    elif [ -n "${log_path}" ]; then
+      path="${log_path}"
     else
       echo "Log path not set"
     fi
 
-    if [ -n "${fr_logs_endpoint}" ]; then
-      logsEndpoint="$fr_logs_endpoint"
+    if [ -n "${logs_endpoint}" ]; then
+      logsEndpoint="$logs_endpoint"
     else
       logsEndpoint="https://api.fusionreactor.io/v1/logs"
     fi
@@ -380,12 +380,12 @@ if [ "$(yq e '.integrations.node_exporter.enabled' "$CONFIG")" != "true" ]; then
 fi
 
 # Detect MySQL
-if (ss -ltn | grep -qE :3306) || [ -n "${fr_mysql_connection_string}" ]; then
+if (ss -ltn | grep -qE :3306) || [ -n "${mysql_connection_string}" ]; then
   echo "MySQL detected"
   # Check if connection string already set in environment
-  if [ -z "${fr_mysql_connection_string}" ]; then
+  if [ -z "${mysql_connection_string}" ]; then
     # Check if credentials already set in environment
-    if { [ -z "${fr_mysql_user}" ] || [ -z "${fr_mysql_password}" ]; } && [ "$PROMPT" != false ]; then
+    if { [ -z "${mysql_user}" ] || [ -z "${mysql_password}" ]; } && [ "$PROMPT" != false ]; then
       echo "MySQL credentials not found"
       while true; do
           echo "Enter your username:"
@@ -407,16 +407,16 @@ if (ss -ltn | grep -qE :3306) || [ -n "${fr_mysql_connection_string}" ]; then
           fi
       done
       yq -i e '.integrations.mysqld_exporter.enabled |= true, .integrations.mysqld_exporter.data_source_name |= "'"$user"':'"$pass"'@(127.0.0.1:3306)/"' "$CONFIG"
-    elif [ "${fr_mysql_user}" ] && [ "${fr_mysql_password}" ]; then
+    elif [ "${mysql_user}" ] && [ "${mysql_password}" ]; then
       echo "MySQL credentials found"
-      yq -i e '.integrations.mysqld_exporter.enabled |= true, .integrations.mysqld_exporter.data_source_name |= "'"${fr_mysql_user}"':'"${fr_mysql_password}"'@(127.0.0.1:3306)/"' "$CONFIG"
+      yq -i e '.integrations.mysqld_exporter.enabled |= true, .integrations.mysqld_exporter.data_source_name |= "'"${mysql_user}"':'"${mysql_password}"'@(127.0.0.1:3306)/"' "$CONFIG"
     else
       echo "MySQL credentials not found"
     fi
   else
-    yq -i e '.integrations.mysqld_exporter.enabled |= true, .integrations.mysqld_exporter.data_source_name |= "'"${fr_mysql_connection_string}"'"' "$CONFIG"
+    yq -i e '.integrations.mysqld_exporter.enabled |= true, .integrations.mysqld_exporter.data_source_name |= "'"${mysql_connection_string}"'"' "$CONFIG"
   fi
-  if [ -n "${fr_mysql_disabled}" ] && [ "${fr_mysql_disabled}" = true ]; then
+  if [ -n "${mysql_disabled}" ] && [ "${mysql_disabled}" = true ]; then
     yq -i e '.integrations.mysqld_exporter.enabled |= false' "$CONFIG"
     echo "MySQL integration configured"
   else
@@ -425,12 +425,12 @@ if (ss -ltn | grep -qE :3306) || [ -n "${fr_mysql_connection_string}" ]; then
 fi
 
 # Detect MSSQL
-if (ss -ltn | grep -qE :1433) || [ -n "${fr_mssql_connection_string}" ]; then
+if (ss -ltn | grep -qE :1433) || [ -n "${mssql_connection_string}" ]; then
   echo "MSSQL detected"
   # Check if connection string already set in environment
-  if [ -z "${fr_mssql_connection_string}" ]; then
+  if [ -z "${mssql_connection_string}" ]; then
     # Check if credentials already set in environment
-    if { [ -z "${fr_mssql_user}" ] || [ -z "${fr_mssql_password}" ]; } && [ "$PROMPT" != false ]; then
+    if { [ -z "${mssql_user}" ] || [ -z "${mssql_password}" ]; } && [ "$PROMPT" != false ]; then
       echo "MSSQL credentials not found"
       while true; do
           echo "Enter your username:"
@@ -452,16 +452,16 @@ if (ss -ltn | grep -qE :1433) || [ -n "${fr_mssql_connection_string}" ]; then
           fi
       done
       yq -i e '.integrations.mssql.enabled |= true, .integrations.mssql.connection_string |= "sqlserver://'"$user"':'"$pass"'@1433:1433" | .integrations.mssql.connection_string style="double"' "$CONFIG"
-    elif [ "${fr_mssql_user}" ] && [ "${fr_mssql_password}" ]; then
+    elif [ "${mssql_user}" ] && [ "${mssql_password}" ]; then
       echo "MSSQL credentials found";
-      yq -i e '.integrations.mssql.enabled |= true, .integrations.mssql.connection_string |= "sqlserver://'"${fr_mssql_user}"':'"${fr_mssql_password}"'@1433:1433" | .integrations.mssql.connection_string style="double"' "$CONFIG"
+      yq -i e '.integrations.mssql.enabled |= true, .integrations.mssql.connection_string |= "sqlserver://'"${mssql_user}"':'"${mssql_password}"'@1433:1433" | .integrations.mssql.connection_string style="double"' "$CONFIG"
     else
       echo "MSSQL credentials not found"
     fi
   else
-    yq -i e '.integrations.mssql.enabled |= true, .integrations.mssql.connection_string |= "'"${fr_mssql_connection_string}"'"' "$CONFIG"
+    yq -i e '.integrations.mssql.enabled |= true, .integrations.mssql.connection_string |= "'"${mssql_connection_string}"'"' "$CONFIG"
   fi
-  if [ -n "${fr_mssql_disabled}" ] && [ "${fr_mssql_disabled}" = true ]; then
+  if [ -n "${mssql_disabled}" ] && [ "${mssql_disabled}" = true ]; then
     yq -i e '.integrations.mssql.enabled |= false' "$CONFIG"
     echo "MSSQL integration configured"
   else
@@ -470,12 +470,12 @@ if (ss -ltn | grep -qE :1433) || [ -n "${fr_mssql_connection_string}" ]; then
 fi
 
 # Detect Postgres
-if (ss -ltn | grep -qE :5432) || [ -n "${fr_postgres_connection_string}" ]; then
+if (ss -ltn | grep -qE :5432) || [ -n "${postgres_connection_string}" ]; then
   echo "Postgres detected"
   # Check if connection string already set in environment
-  if [ -z "${fr_postgres_connection_string}" ]; then
+  if [ -z "${postgres_connection_string}" ]; then
     # Check if credentials already set in environment
-    if { [ -z "${fr_postgres_user}" ] || [ -z "${fr_postgres_password}" ]; } && [ "$PROMPT" != false ]; then
+    if { [ -z "${postgres_user}" ] || [ -z "${postgres_password}" ]; } && [ "$PROMPT" != false ]; then
       echo "Postgres credentials not found"
       while true; do
           echo "Enter your username:"
@@ -497,16 +497,16 @@ if (ss -ltn | grep -qE :5432) || [ -n "${fr_postgres_connection_string}" ]; then
           fi
       done
       yq -i e '.integrations.postgres_exporter.enabled |= true, .integrations.postgres_exporter.data_source_names |= ["postgresql://'"$user"':'"$pass"'@127.0.0.1:5432/shop?sslmode=disable"] | .integrations.postgres_exporter.data_source_names[0] style="double"' "$CONFIG"
-    elif [ "${fr_postgres_user}" ] && [ "${fr_postgres_password}" ]; then
+    elif [ "${postgres_user}" ] && [ "${postgres_password}" ]; then
       echo "Postgres credentials found";
-      yq -i e '.integrations.postgres_exporter.enabled |= true, .integrations.postgres_exporter.data_source_names |= ["postgresql://'"${fr_postgres_user}"':'"${fr_postgres_password}"'@127.0.0.1:5432/shop?sslmode=disable"] | .integrations.postgres_exporter.data_source_names[0] style="double"' "$CONFIG"
+      yq -i e '.integrations.postgres_exporter.enabled |= true, .integrations.postgres_exporter.data_source_names |= ["postgresql://'"${postgres_user}"':'"${postgres_password}"'@127.0.0.1:5432/shop?sslmode=disable"] | .integrations.postgres_exporter.data_source_names[0] style="double"' "$CONFIG"
     else
       echo "Postgres credentials not found"
     fi
   else
-    yq -i e '.integrations.postgres_exporter.enabled |= true, .integrations.postgres_exporter.data_source_names |= "'"${fr_postgres_connection_string}"'"' "$CONFIG"
+    yq -i e '.integrations.postgres_exporter.enabled |= true, .integrations.postgres_exporter.data_source_names |= "'"${postgres_connection_string}"'"' "$CONFIG"
   fi
-  if [ -n "${fr_postgres_disabled}" ] && [ "${fr_postgres_disabled}" = true ]; then
+  if [ -n "${postgres_disabled}" ] && [ "${postgres_disabled}" = true ]; then
     yq -i e '.integrations.postgres_exporter.enabled |= false' "$CONFIG"
     echo "Postgres integration configured"
   else
