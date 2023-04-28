@@ -30,7 +30,7 @@ In a terminal, run: </br>
 Agent installation is enabled by default. To run without installing the agent, add `--install false` to the end of the run command. For example: </br>
 `sudo path/to/grafana-agent-autoconf.sh --install false`
 
-To modify a pre-existing config file, add the `--config.file` flag, followed by the path to the file, to the end of the run command. For example: 
+To modify a pre-existing config file, add `--config.file`, followed by the path to the file, to the end of the run command. For example: 
 `sudo path/to/grafana-agent-autoconf.sh --config.file path/to/configfile`  
 A backup of your original file will be created
 
@@ -65,7 +65,7 @@ services:
       - fr_log_path=path
 ```
 
-For more information please visit the [Docker Documentation](https://docs.docker.com/engine/reference/commandline/run/#env)
+For more information please visit the [Docker documentation](https://docs.docker.com/engine/reference/commandline/run/#env)
 
 ## Environment Variables
 To add integrations without being prompted for credentials, there are several environment variables you can use:
