@@ -321,31 +321,31 @@ integrations:
 EOF
 
 while true; do
-    if [ "$PROMPT" != false ] && [ -z "${log_collection}" ]; then
+    if [ "$PROMPT" != false ] && [ -z "${fr_log_collection}" ]; then
       echo "Is there a service you want to enable log collection for? (y/n)"
       read -r ans
       ans=${ans,,}
-    elif [ "${log_collection}" = true ]; then
+    elif [ "${fr_log_collection}" = true ]; then
       ans="y"
     else
       ans="n"
     fi
 
   if [ "$ans" = "y" ]; then
-    if [ "$PROMPT" != false ] && [ -z "${service_name}" ]; then
+    if [ "$PROMPT" != false ] && [ -z "${fr_service_name}" ]; then
       echo "Enter the service name: "
       read -r job
-    elif [ -n "${service_name}" ]; then
-      job="${service_name}"
+    elif [ -n "${fr_service_name}" ]; then
+      job="${fr_service_name}"
     else
       echo "Service name not set"
     fi
 
-    if [ "$PROMPT" != false ] && [ -z "${log_path}" ]; then
+    if [ "$PROMPT" != false ] && [ -z "${fr_log_path}" ]; then
       echo "Enter the path to the log file: "
       read -r path
-    elif [ -n "${log_path}" ]; then
-      path="${log_path}"
+    elif [ -n "${fr_log_path}" ]; then
+      path="${fr_log_path}"
     else
       echo "Log path not set"
     fi

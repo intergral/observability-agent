@@ -24,16 +24,7 @@ path/to/observability-agent-autoconf.ps1
 
 ### Docker
 When running in Docker, you will not be prompted for any information. Therefore, you must specify an api key before running. Additionally, you must set the relevant
-environment variables for whichever services you have running, so they can be configured.
-
-To set the api key the following environment variable must be set:
-- fr_api_key
-
-If you wish to enable log collection, the following environment variables
-must be set:
-- log_collection
-- service_name
-- log_path
+environment variables for whichever services you have running, so they can be configured. These environment variables can be found in [Additional Options](#Additional Options)
 
 Example for setting environment variables individually:
 `docker run --env fr_api_key=1234567890 --env log_collection=true --env service_name=service --env log_path=path docker.io/grafana/agent:main-amd64`
@@ -56,7 +47,7 @@ sudo path/to/grafana-agent-autoconf.sh --install false --config.file path/to/con
 or
 sudo path/to/grafana-agent-autoconf.sh --config.file path/to/config --install false
 
-## Additional options
+## Additional Options
 To add integrations without being prompted for credentials, there are several environment variables you can use:
 - fr_api_key
 - fr_mysql_user
@@ -65,6 +56,12 @@ To add integrations without being prompted for credentials, there are several en
 - fr_mssql_password
 - fr_postgres_user
 - fr_postgres_password
+
+If you wish to enable log collection, the following environment variables
+must be set:
+- fr_log_collection
+- fr_service_name
+- fr_log_path
 
 The default connection strings used in the config file are:
 - MySQL -`<username>:<password>@(127.0.0.1:3306)/`
