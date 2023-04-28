@@ -205,7 +205,7 @@ $integrationProperties.Add('windows_exporter', @{
 Write-Output "Windows exporter integration enabled"
 
 #Detect MySQL
-if ((Get-NetTCPConnection).LocalPort -contains 3306){
+if ((Get-NetTCPConnection).LocalPort -contains 3306 -or $env:fr_mysql_connection_string){
     Write-Host "MySQL detected"
     # Check if connection string already set in environment
     if (-not $env:fr_mysql_connection_string)
@@ -273,7 +273,7 @@ if ((Get-NetTCPConnection).LocalPort -contains 3306){
 }
 
 #Detect MSSQL
-if ((Get-NetTCPConnection).LocalPort -contains 1433) {
+if ((Get-NetTCPConnection).LocalPort -contains 1433 -or $env:fr_mssql_connection_string){
     Write-Host "MSSQL detected"
     # Check if connection string already set in environment
     if (-not $env:fr_mssql_connection_string)
@@ -339,7 +339,7 @@ if ((Get-NetTCPConnection).LocalPort -contains 1433) {
 }
 
 #Detect Postgres
-if ((Get-NetTCPConnection).LocalPort -contains 5432) {
+if ((Get-NetTCPConnection).LocalPort -contains 5432 -or $env:fr_postgres_connection_string){
     Write-Host "Postgres detected"
     # Check if connection string already set in environment
     if (-not $env:fr_postgres_connection_string)
