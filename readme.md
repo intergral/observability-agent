@@ -28,16 +28,16 @@ In a terminal, run: </br>
 ### Options
 
 Agent installation is enabled by default. To run without installing the agent, add `--install false` to the end of the run command. For example: </br>
-`sudo path/to/grafana-agent-autoconf.sh --install false`
+`sudo path/to/observability-agent-autoconf.sh --install false`
 
 To modify a pre-existing config file, add `--config.file`, followed by the path to the file, to the end of the run command. For example: 
-`sudo path/to/grafana-agent-autoconf.sh --config.file path/to/configfile`  
+`sudo path/to/observability-agent-autoconf.sh --config.file path/to/configfile`  
 A backup of your original file will be created
 
 You can use both `--install` and `--config.file` options in the same run command, order is irrelevant. For example: </br>
-`sudo path/to/grafana-agent-autoconf.sh --install false --config.file path/to/config`</br>
+`sudo path/to/observability-agent-autoconf.sh --install false --config.file path/to/config`</br>
 or </br>
-`sudo path/to/grafana-agent-autoconf.sh --config.file path/to/config --install false`
+`sudo path/to/observability-agent-autoconf.sh --config.file path/to/config --install false`
 
 ### Docker
 When running in Docker, you will not be prompted for any information. Therefore, you must specify an api key before running. Additionally, you must set the relevant
@@ -46,10 +46,10 @@ environment variables for whichever services you have running, so they can be co
 > ⚠️ The agent will not ship to FusionReactor without setting the `fr_api_key` variable
 
 Example for setting environment variables individually: </br>
-`docker run --env fr_api_key=1234567890 --env fr_log_collection=true --env fr_service_name=service --env fr_log_path=path docker.io/grafana/agent:main-amd64`
+`docker run --env fr_api_key=1234567890 --env fr_log_collection=true --env fr_service_name=service --env fr_log_path=path intergralgmbh/observability-agent:latest`
 
 Example for setting environment variables using an env file: </br>
-`docker run --env-file env.list docker.io//grafana/agent:main-amd64`
+`docker run --env-file env.list intergralgmbh/observability-agent:latest`
 
 Example for setting environment variables using docker-compose:
 ```yaml
@@ -114,4 +114,4 @@ to disable it by default when creating the configuration:
 | `fr_postgres_disabled` | `bool` |
 
 If you wish to use an environment file to set environment variables, rather than setting them as system environment variables,
-you can do so by naming the file ".env" and placing it in the same directory as the "grafana-agent-autoconf" script.
+you can do so by naming the file ".env" and placing it in the same directory as the "observability-agent-autoconf" script.
