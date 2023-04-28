@@ -27,7 +27,7 @@ In a terminal, run: </br>
 
 ### Options
 
-Agent installation is enabled by default. To run without installing the agent, add the `--install false`  to the end of the run command. For example: </br>
+Agent installation is enabled by default. To run without installing the agent, add `--install false` to the end of the run command. For example: </br>
 `sudo path/to/grafana-agent-autoconf.sh --install false`
 
 To modify a pre-existing config file, add the `--config.file` flag, followed by the path to the file, to the end of the run command. For example: 
