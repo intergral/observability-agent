@@ -65,7 +65,7 @@ services:
       - fr_log_path=path
 ```
 
-For more information please visit the [docker documentation](https://docs.docker.com/engine/reference/commandline/run/#env)
+For more information please visit the [Docker Documentation](https://docs.docker.com/engine/reference/commandline/run/#env)
 
 ## Environment Variables
 To add integrations without being prompted for credentials, there are several environment variables you can use:
