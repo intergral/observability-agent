@@ -249,7 +249,7 @@ if [ "$INSTALL" != false ]; then
       echo "OS not supported, downloading binary..."
       # Download the binary
       # Can't install jq if OS is unknown, therefore can't get latest binary
-      curl -O -L "https://github.com/grafana/agent/releases/download/v0.32.1/grafana-agent-linux-$ARCH.zip"
+      curl -O -L "https://github.com/grafana/agent/releases/download/v0.33.0/grafana-agent-linux-$ARCH.zip"
       # extract the binary
       unzip "grafana-agent-linux-$ARCH.zip"
       # make sure it is executable
