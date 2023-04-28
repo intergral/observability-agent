@@ -293,6 +293,11 @@ else
   key="${fr_api_key}"
 fi
 
+if [ -z "$key" ]; then
+  echo "API key not set"
+  exit 1
+fi
+
 if [ -n "${fr_metrics_endpoint}" ]; then
   metricsEndpoint="$fr_metrics_endpoint"
 else
