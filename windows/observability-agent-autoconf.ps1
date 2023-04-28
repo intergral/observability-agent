@@ -87,12 +87,10 @@ else {
 if ($env:fr_metrics_endpoint)
 {
     $metricsEndpoint = $env:fr_metrics_endpoint
-    Write-Host "YES"
 }
 else
 {
     $metricsEndpoint = "https://api.fusionreactor.io/v1/metrics"
-    Write-Host "NO"
 }
 
 # Create config file
@@ -119,10 +117,36 @@ Install-Module powershell-yaml -Scope CurrentUser
 Import-Module powershell-yaml
 
 while ($true) {
-    $ans = Read-Host "Is there a service you want to enable log collection for? (y/n)" | ForEach-Object { $_.ToLower() }
+    if (-not $env:fr_log_collection)
+    {
+        $ans = Read-Host "Is there a service you want to enable log collection for? (y/n)" | ForEach-Object { $_.ToLower() }
+    }
+    elseif ($env:fr_log_collection = $true) {
+        $ans="y"
+    }
+    else
+    {
+        $ans="n"
+    }
+
     if ($ans -eq "y") {
-        $path = Read-Host "Enter the service name"
-        $job = Read-Host "Enter the path to the log file"
+        if ($env:fr_service_name)
+        {
+            $job = $env:fr_service_name
+        }
+        else
+        {
+            $job = Read-Host "Enter the service name"
+        }
+
+        if ($env:fr_log_path)
+        {
+            $path = $env:fr_log_path
+        }
+        else
+        {
+            $path = Read-Host "Enter the path to the log file"
+        }
 
         if ($env:fr_logs_endpoint)
         {
