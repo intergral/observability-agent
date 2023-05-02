@@ -21,4 +21,4 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
       - name: Build Images
         working-directory: ./linux
-        run: docker buildx build --platform linux/amd64,linux/arm64,linux/ppc64le,linux/s390x -t intergralgmbh/observability-agent:latest --push .
+        run: docker buildx build --platform linux/amd64,linux/arm64 -t intergralgmbh/observability-agent:latest --push .

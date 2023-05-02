@@ -56,10 +56,21 @@ Example for setting environment variables using docker-compose:
 version: "3.2"
 
 services:
+
+  #database
+  mysql:
+    image: mysql:latest
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=my-secret-pw
+  
+  #agent
   agent:
     image: intergralgmbh/observability-agent:latest
     environment:
       - api_key=1234567890
+      - mysql_connection_string=root:my-secret-pw@(mysql:3306)/
       - log_collection=true
       - service_name=service
       - log_path=path
@@ -70,23 +81,23 @@ For more information please visit the [Docker documentation](https://docs.docker
 ## Environment Variables
 To add integrations without being prompted for credentials, there are several environment variables you can use:
 
-| Variable               | Type     |
-|------------------------|----------|
-| `api_key`           | `string` |
-| `mysql_user`        | `string` |
-| `mysql_password`    | `string` |
-| `mssql_user`        | `string` |
-| `mssql_password`    | `string` |
-| `postgres_user`     | `string` |
-| `postgres_password` | `string` |
+| Variable              | Type     |
+|-----------------------|----------|
+| `api_key`             | `string` |
+| `mysql_user`          | `string` |
+| `mysql_password`      | `string` |
+| `mssql_user`          | `string` |
+| `mssql_password`      | `string` |
+| `postgres_user`       | `string` |
+| `postgres_password`   | `string` |
 
 If you wish to enable log collection, the following environment variables must be set:
 
-| Variable            | Type     |
-|---------------------|----------|
-| `log_collection` | `bool`   |
-| `service_name`   | `string` |
-| `log_path`       | `string` |
+| Variable           | Type     |
+|--------------------|----------|
+| `log_collection`   | `bool`   |
+| `service_name`     | `string` |
+| `log_path`         | `string` |
 
 The default connection strings used in the config file are:
 
@@ -98,20 +109,20 @@ The default connection strings used in the config file are:
 
 To replace these with a custom connection string, there are several environment variables you can use:
 
-| Variable                        | Type     |
-|---------------------------------|----------|
-| `mysql_connection_string`    | `string` |
-| `mssql_connection_string`    | `string` |
-| `postgres_connection_string` | `string` |
+| Variable                       | Type     |
+|--------------------------------|----------|
+| `mysql_connection_string`      | `string` |
+| `mssql_connection_string`      | `string` |
+| `postgres_connection_string`   | `string` |
 
 If there is a service running that you don't want to enable the integration for, you can use the relevant environment variable from the following options
 to disable it by default when creating the configuration:
 
-| Variable               | Type   |
-|------------------------|--------|
-| `mysql_disabled`    | `bool` |
-| `mssql_disabled`    | `bool` |
-| `postgres_disabled` | `bool` |
+| Variable              | Type   |
+|-----------------------|--------|
+| `mysql_disabled`      | `bool` |
+| `mssql_disabled`      | `bool` |
+| `postgres_disabled`   | `bool` |
 
 If you wish to use an environment file to set environment variables, rather than setting them as system environment variables,
 you can do so by naming the file ".env" and placing it in the same directory as the "observability-agent-autoconf" script.
