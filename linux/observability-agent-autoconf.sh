@@ -321,6 +321,8 @@ integrations:
   node_exporter:
     enabled: true
     include_exporter_metrics: true
+    enable_collectors:
+      - "cpu"
     disable_collectors:
       - "mdadm"
 EOF
@@ -375,7 +377,7 @@ done
 
 # Ensure node exporter is enabled
 if [ "$(yq e '.integrations.node_exporter.enabled' "$CONFIG")" != "true" ]; then
-    yq -i e '.integrations.node_exporter.enabled |= true | .integrations.node_exporter.include_exporter_metrics |= true | .integrations.node_exporter.disable_collectors = ["mdadm"] | .integrations.node_exporter.disable_collectors[0] style="double"' "$CONFIG"
+    yq -i e '.integrations.node_exporter.enabled |= true | .integrations.node_exporter.include_exporter_metrics |= true | .integrations.node_exporter.enable_collectors = ["cpu"] | .integrations.node_exporter.disable_collectors = ["mdadm"] | .integrations.node_exporter.disable_collectors[0] style="double" | .integrations.node_exporter.enable_collectors[0] style="double"' "$CONFIG"
     echo "Node exporter integration enabled"
 fi
 
