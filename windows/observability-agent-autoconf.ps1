@@ -99,7 +99,7 @@ server:
   log_level: warn
 metrics:
   global:
-    scrape_interval: 1m
+    scrape_interval: 15s
     remote_write:
       - url: '$metricsEndpoint'
         authorization:
