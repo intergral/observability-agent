@@ -74,9 +74,9 @@ if (($CONFIG) -and (Test-Path $CONFIG -PathType Leaf)) {
 }
 
 # Get API key
-if ($env:fr_api_key) {
+if ($env:api_key) {
     Write-Host "API key found"
-    $key = $env:fr_api_key
+    $key = $env:api_key
 }
 else {
     # Prompt for API key
@@ -84,15 +84,13 @@ else {
     $key = Read-Host "Enter your API key"
 }
 
-if ($env:fr_metrics_endpoint)
+if ($env:metrics_endpoint)
 {
-    $metricsEndpoint = $env:fr_metrics_endpoint
-    Write-Host "YES"
+    $metricsEndpoint = $env:metrics_endpoint
 }
 else
 {
     $metricsEndpoint = "https://api.fusionreactor.io/v1/metrics"
-    Write-Host "NO"
 }
 
 # Create config file
@@ -101,7 +99,7 @@ server:
   log_level: warn
 metrics:
   global:
-    scrape_interval: 1m
+    scrape_interval: 15s
     remote_write:
       - url: '$metricsEndpoint'
         authorization:
@@ -119,14 +117,40 @@ Install-Module powershell-yaml -Scope CurrentUser
 Import-Module powershell-yaml
 
 while ($true) {
-    $ans = Read-Host "Is there a service you want to enable log collection for? (y/n)" | ForEach-Object { $_.ToLower() }
-    if ($ans -eq "y") {
-        $path = Read-Host "Enter the service name"
-        $job = Read-Host "Enter the path to the log file"
+    if (-not $env:log_collection)
+    {
+        $ans = Read-Host "Is there a service you want to enable log collection for? (y/n)" | ForEach-Object { $_.ToLower() }
+    }
+    elseif ($env:log_collection = $true) {
+        $ans="y"
+    }
+    else
+    {
+        $ans="n"
+    }
 
-        if ($env:fr_logs_endpoint)
+    if ($ans -eq "y") {
+        if ($env:service_name)
         {
-            $logsEndpoint=$env:fr_logs_endpoint
+            $job = $env:service_name
+        }
+        else
+        {
+            $job = Read-Host "Enter the service name"
+        }
+
+        if ($env:log_path)
+        {
+            $path = $env:log_path
+        }
+        else
+        {
+            $path = Read-Host "Enter the path to the log file"
+        }
+
+        if ($env:logs_endpoint)
+        {
+            $logsEndpoint=$env:logs_endpoint
         }
         else
         {
@@ -181,13 +205,13 @@ $integrationProperties.Add('windows_exporter', @{
 Write-Output "Windows exporter integration enabled"
 
 #Detect MySQL
-if ((Get-NetTCPConnection).LocalPort -contains 3306){
+if ((Get-NetTCPConnection).LocalPort -contains 3306 -or $env:mysql_connection_string){
     Write-Host "MySQL detected"
     # Check if connection string already set in environment
-    if (-not $env:fr_mysql_connection_string)
+    if (-not $env:mysql_connection_string)
     {
         # Check if credentials already set in environment
-        if (-not $env:fr_mysql_user -or -not $env:fr_mysql_password)
+        if (-not $env:mysql_user -or -not $env:mysql_password)
         {
             Write-Host "MySQL credentials not found"
 
@@ -226,14 +250,14 @@ if ((Get-NetTCPConnection).LocalPort -contains 3306){
         else
         {
             Write-Output "MySQL credentials found"
-            $myDatasource = "${env:fr_mysql_user}:${env:fr_mysql_password}@(127.0.0.1:3306)/"
+            $myDatasource = "${env:mysql_user}:${env:mysql_password}@(127.0.0.1:3306)/"
         }
     } else {
-        $myDatasource = $env:fr_mysql_connection_string
+        $myDatasource = $env:mysql_connection_string
     }
 
     # Add integration
-    if ($env:fr_mysql_disabled -eq $true) {
+    if ($env:mysql_disabled -eq $true) {
         $integrationProperties.Add('mysqld_exporter', [ordered]@{
             enabled = $false
             data_source_name = $myDatasource
@@ -249,13 +273,13 @@ if ((Get-NetTCPConnection).LocalPort -contains 3306){
 }
 
 #Detect MSSQL
-if ((Get-NetTCPConnection).LocalPort -contains 1433) {
+if ((Get-NetTCPConnection).LocalPort -contains 1433 -or $env:mssql_connection_string){
     Write-Host "MSSQL detected"
     # Check if connection string already set in environment
-    if (-not $env:fr_mssql_connection_string)
+    if (-not $env:mssql_connection_string)
     {
         # Check if credentials already set in environment
-        if (-not $env:fr_mssql_user -or -not $env:fr_mssql_password)
+        if (-not $env:mssql_user -or -not $env:mssql_password)
         {
             Write-Host "MSSQL credentials not found"
             while ($true)
@@ -293,13 +317,13 @@ if ((Get-NetTCPConnection).LocalPort -contains 1433) {
         else
         {
             Write-Output "MSSQL credentials found"
-            $msDatasource = "sqlserver://${env:fr_mssql_user}:${env:fr_mssql_password}@1433:1433"
+            $msDatasource = "sqlserver://${env:mssql_user}:${env:mssql_password}@1433:1433"
         }
     } else {
-        $msDatasource = $env:fr_mssql_connection_string
+        $msDatasource = $env:mssql_connection_string
     }
     # Add integration
-    if ($env:fr_mssql_disabled -eq $true) {
+    if ($env:mssql_disabled -eq $true) {
         $integrationProperties.Add('mssql', [ordered]@{
             enabled = $false
             connection_string = $msDatasource
@@ -315,13 +339,13 @@ if ((Get-NetTCPConnection).LocalPort -contains 1433) {
 }
 
 #Detect Postgres
-if ((Get-NetTCPConnection).LocalPort -contains 5432) {
+if ((Get-NetTCPConnection).LocalPort -contains 5432 -or $env:postgres_connection_string){
     Write-Host "Postgres detected"
     # Check if connection string already set in environment
-    if (-not $env:fr_postgres_connection_string)
+    if (-not $env:postgres_connection_string)
     {
         # Check if credentials already set in environment
-        if (-not $env:fr_postgres_user -or -not $env:fr_postgres_password)
+        if (-not $env:postgres_user -or -not $env:postgres_password)
         {
             Write-Host "Postgres credentials not found"
             while ($true)
@@ -359,13 +383,13 @@ if ((Get-NetTCPConnection).LocalPort -contains 5432) {
         else
         {
             Write-Output "Postgres credentials found"
-            $postgresDatasource = "postgresql://${env:fr_postgres_user}:${env:fr_postgres_password}@127.0.0.1:5432/shop?sslmode=disable"
+            $postgresDatasource = "postgresql://${env:postgres_user}:${env:postgres_password}@127.0.0.1:5432/shop?sslmode=disable"
         }
     } else {
-        $postgresDatasource = $env:fr_postgres_connection_string
+        $postgresDatasource = $env:postgres_connection_string
     }
     # Add integration
-    if ($env:fr_postgres_disabled -eq $true) {
+    if ($env:postgres_disabled -eq $true) {
         $integrationProperties.Add('postgres_exporter', [ordered]@{
             enabled = $false
             connection_string = $postgresDatasource

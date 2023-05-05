@@ -1,4 +1,4 @@
-name: Makefile
+name: Build
 
 on:
   push:
@@ -7,34 +7,18 @@ on:
     branches: [ main ]
 
 jobs:
-  build-amd64:
+  build-images:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Run Makefile
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Log in to Docker Hub
+        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Build Images
         working-directory: ./linux
-        run: make amd64-image
-#  build-ppc64le:
-#    runs-on: macos-latest
-#    steps:
-#      - uses: actions/checkout@v3
-#      - name: Install Docker
-#        run: brew install docker
-##      - name: Install Docker buildx
-##        run: brew install docker-buildx
-#      - name: Run Docker
-#        run: colima start
-##      - name: Start Docker daemon
-##        run: brew services start docker
-#      - name: Set up Docker Buildx
-#        uses: docker/setup-buildx-action@v2
-#      - name: Run Makefile
-#        working-directory: ./linux
-#        run: sudo make ppc64le-image
-  build-arm64:
-    runs-on: self-hosted
-    steps:
-      - uses: actions/checkout@v3
-      - name: Run Makefile
-        working-directory: ./linux
-        run: sudo make arm64-image
+        run: docker buildx build --platform linux/amd64,linux/arm64 -t intergralgmbh/observability-agent:latest --push .
