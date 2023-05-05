@@ -124,5 +124,14 @@ to disable it by default when creating the configuration:
 | `mssql_disabled`      | `bool` |
 | `postgres_disabled`   | `bool` |
 
+
+To change the endpoints for metrics and logs, you can use these environment variables:
+
+| Variable          | Type     | Default                                   |
+|-------------------|----------|-------------------------------------------|
+| `metricsEndpoint` | `string` | `https://api.fusionreactor.io/v1/metrics` |
+| `logsEndpoint`    | `string` | `https://api.fusionreactor.io/v1/logs`    |
+
+
 If you wish to use an environment file to set environment variables, rather than setting them as system environment variables,
 you can do so by naming the file ".env" and placing it in the same directory as the "observability-agent-autoconf" script.
