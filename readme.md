@@ -20,18 +20,22 @@ for must be running on its default port, these are:
 [Latest Release](https://github.com/intergral/observability-agent/releases)
 
 ### Linux
-To download the installer, in a terminal, run: </br>
-`curl -O -L "https://github.com/intergral/observability-agent/releases/download/v0.1.0/observability-agent-autoconf.sh"
-chmod a+x "observability-agent-autoconf.sh"`
-
-To run the installer, in a terminal, run: </br>
-`sudo /bin/bash path/to/observability-agent-autoconf.sh`
+To download and run the installer, in a terminal, run: </br>
+```
+curl -O -L "https://github.com/intergral/observability-agent/releases/download/v0.1.0/observability-agent-autoconf.sh"
+chmod a+x "observability-agent-autoconf.sh"
+sudo /bin/bash observability-agent-autoconf.sh
+```
 
 ### Windows
-To run the installer, in a powershell admin terminal, run: </br>
-`path/to/observability-agent-autoconf.ps1`
+To download and run the installer, open powershell admin terminal, navigate to your desired download folder and run: </br>
+```
+Invoke-WebRequest -Uri "https://github.com/intergral/observability-agent/releases/download/v0.1.0/observability-agent-autoconf.ps1" -OutFile "observability-agent-autoconf.ps1"
+.\observability-agent-autoconf.ps1
+```
 
-The installer for windows assumes you are installing the agent on the C drive, this is required for the config file to be placed in the correct location for the Grafana Agent to read it. 
+The installer for windows assumes you are installing the Grafana Agent in the default location on the C drive </br>
+This is required for the config file to be placed in the correct location for the Grafana Agent to read it
 
 ### Options
 
@@ -58,16 +62,11 @@ To add integrations without being prompted for credentials, there are several en
 
 ### Ingest
 
-| Variable              | Type     | Description                                                   |
-|-----------------------|----------|---------------------------------------------------------------|
-| `api_key`             | `string` | API Key to authenticate with your FusionReactor Cloud Account |
-
-To change the endpoints for metrics and logs, you can use these environment variables:
-
-| Variable          | Type     | Default                                   |
-|-------------------|----------|-------------------------------------------|
-| `metricsEndpoint` | `string` | `https://api.fusionreactor.io/v1/metrics` |
-| `logsEndpoint`    | `string` | `https://api.fusionreactor.io/v1/logs`    |
+| Variable            | Type     | Description                                                   |
+|---------------------|----------|---------------------------------------------------------------|
+| `api_key`           | `string` | API Key to authenticate with your FusionReactor Cloud Account |
+| `metricsEndpoint`   | `string` | Default: `https://api.fusionreactor.io/v1/metrics`            |
+| `logsEndpoint`      | `string` | Default: `https://api.fusionreactor.io/v1/logs`               |
 
 ### Metric Exporters
 
