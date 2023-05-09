@@ -210,7 +210,7 @@ if [ "$INSTALL" != false ]; then
     if [ "$ARCH" != "unsupported" ]; then
       echo "Downloading binary..."
       # download the binary
-      DOWNLOAD_URL=$(curl -s https://api.github.com/repos/grafana/agent/releases/latest | jq ".assets[] | select(.name|match(\"agent-darwin-$ARCH.zip$\")) | .browser_download_url" | tr -d '"')
+      DOWNLOAD_URL=$(curl -s https://api.github.com/repos/grafana/agent/releases/latest | jq ".assets[] | select((.name | test(\"flow|agentctl\") | not) and (.name|match(\"agent-darwin-$ARCH.zip$\"))) | .browser_download_url" | tr -d '"')
       curl -LO "$DOWNLOAD_URL"
       # extract the binary
       unzip "grafana-agent-darwin-$ARCH.zip"
@@ -227,7 +227,7 @@ if [ "$INSTALL" != false ]; then
   else
     if [ "$OS" = "Debian" ]; then
       if [ "$ARCH" != "unsupported" ]; then
-        DOWNLOAD_URL=$(curl -s https://api.github.com/repos/grafana/agent/releases/latest | jq ".assets[] | select(.name|match(\"$ARCH.deb$\")) | .browser_download_url" | tr -d '"')
+        DOWNLOAD_URL=$(curl -s https://api.github.com/repos/grafana/agent/releases/latest | jq '.assets[] | select((.name | test("flow") | not) and (.name | endswith("'"$ARCH.deb"'"))) | .browser_download_url' | tr -d '"')
         curl -LO "$DOWNLOAD_URL"
         dpkg -i "$(basename "$DOWNLOAD_URL")"
       else
@@ -237,7 +237,7 @@ if [ "$INSTALL" != false ]; then
 
     elif [ "$OS" = "RedHat" ] || [ "$OS" = "SUSE" ]; then
       if [ "$ARCH" != "unsupported" ]; then
-        DOWNLOAD_URL=$(curl -s https://api.github.com/repos/grafana/agent/releases/latest | jq ".assets[] | select(.name|match(\"$ARCH.rpm$\")) | .browser_download_url" | tr -d '"')
+        DOWNLOAD_URL=$(curl -s https://api.github.com/repos/grafana/agent/releases/latest | jq '.assets[] | select((.name | test("flow") | not) and (.name | endswith("'"$ARCH.rpm"'"))) | .browser_download_url' | tr -d '"')
         curl -LO "$DOWNLOAD_URL"
         rpm -i "$(basename "$DOWNLOAD_URL")"
         #change after config updated
@@ -519,4 +519,9 @@ echo "Config file updated";
 if [ "${asBinary}" = true ]; then
   echo "The Grafana agent was downloaded as a binary so it will have to be started manually"
   echo "To run the binary, run: $binLocation --config.file $CONFIG"
+else
+  mv $CONFIG /etc/grafana-agent.yaml
+  echo "Config file can be found in /etc/grafana-agent.yaml"
+  systemctl start grafana-agent.service
+  echo "Agent started"
 fi
