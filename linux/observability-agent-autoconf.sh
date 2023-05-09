@@ -519,7 +519,9 @@ echo "Config file updated";
 if [ "${asBinary}" = true ]; then
   echo "The Grafana agent was downloaded as a binary so it will have to be started manually"
   echo "To run the binary, run: $binLocation --config.file $CONFIG"
-else
+
+# If prompt flag is used, it's running in Docker (we don't need to move files or restart the agent for docker)
+elif [ "$PROMPT" != false ]; then
   mv $CONFIG /etc/grafana-agent.yaml
   echo "Config file can be found at /etc/grafana-agent.yaml"
   systemctl start grafana-agent.service
