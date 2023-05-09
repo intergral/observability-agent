@@ -406,3 +406,6 @@ if ((Get-NetTCPConnection).LocalPort -contains 5432 -or $env:postgres_connection
 
 $configContent | ConvertTo-Yaml | Set-Content -Path $CONFIG
 Write-Output "Config file updated"
+
+Move-Item -Path $CONFIG -Destination "C:\Program Files\Grafana Agent\agent-config.yaml" -Force
+Restart-Service -Name "Grafana Agent" -Force
