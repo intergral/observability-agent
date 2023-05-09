@@ -521,7 +521,7 @@ if [ "${asBinary}" = true ]; then
   echo "To run the binary, run: $binLocation --config.file $CONFIG"
 else
   mv $CONFIG /etc/grafana-agent.yaml
-  echo "Config file can be found in /etc/grafana-agent.yaml"
+  echo "Config file can be found at /etc/grafana-agent.yaml"
   systemctl start grafana-agent.service
-  echo "Agent started"
+  echo "Grafana Agent started"
 fi

@@ -408,4 +408,5 @@ $configContent | ConvertTo-Yaml | Set-Content -Path $CONFIG
 Write-Output "Config file updated"
 
 Move-Item -Path $CONFIG -Destination "C:\Program Files\Grafana Agent\agent-config.yaml" -Force
+Write-Host "Config file can be found at C:\Program Files\Grafana Agent\agent-config.yaml"
 Restart-Service -Name "Grafana Agent" -Force

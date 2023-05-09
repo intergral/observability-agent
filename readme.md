@@ -28,8 +28,10 @@ To run the installer, in a terminal, run: </br>
 `sudo /bin/bash path/to/observability-agent-autoconf.sh`
 
 ### Windows
-To run the installer, in a terminal, run: </br>
+To run the installer, in a powershell admin terminal, run: </br>
 `path/to/observability-agent-autoconf.ps1`
+
+The installer for windows assumes you are installing the agent on the C drive, this is required for the config file to be placed in the correct location for the Grafana Agent to read it. 
 
 ### Options
 
