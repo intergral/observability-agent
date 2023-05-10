@@ -70,17 +70,17 @@ To add integrations without being prompted for credentials, there are several en
 
 ### Metric Exporters
 
-| Variable              | Type     | Description                                                    |
-|-----------------------|----------|----------------------------------------------------------------|
-| `mysql_user`          | `string` | User for the local Mysql database                              |
-| `mysql_password`      | `string` | Password for the local Mysql database                          |
-| `mysql_disabled`      | `bool`   | Enables/Disables Mysql the mysql exporter (enabled by default) |
-| `mssql_user`          | `string` |                                                                |
-| `mssql_password`      | `string` |                                                                |
-| `mssql_disabled`      | `bool`   |                                                                |
-| `postgres_user`       | `string` |                                                                |
-| `postgres_password`   | `string` |                                                                |
-| `postgres_disabled`   | `bool`   |                                                                |
+| Variable            | Type     | Description                                                 |
+|---------------------|----------|-------------------------------------------------------------|
+| `mysql_user`        | `string` | User for the local Mysql database                           |
+| `mysql_password`    | `string` | Password for the local Mysql database                       |
+| `mysql_disabled`    | `bool`   | Enables/Disables the Mysql exporter (enabled by default)    |
+| `mssql_user`        | `string` | User for the local Mssql database                           |
+| `mssql_password`    | `string` | Password for the local Mssql database                       |
+| `mssql_disabled`    | `bool`   | Enables/Disables the Mssql exporter (enabled by default)    |
+| `postgres_user`     | `string` | User for the local Postgres database                        |
+| `postgres_password` | `string` | Password for the local Postgres database                    |
+| `postgres_disabled` | `bool`   | Enables/Disables the Postgres exporter (enabled by default) |
 
 ### Exporting metrics from external machines
 
