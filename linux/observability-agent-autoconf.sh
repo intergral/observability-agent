@@ -210,7 +210,7 @@ if [ "$INSTALL" != false ]; then
     if [ "$ARCH" != "unsupported" ]; then
       echo "Downloading binary..."
       # download the binary
-      DOWNLOAD_URL=$(curl -s https://api.github.com/repos/grafana/agent/releases/latest | jq ".assets[] | select((.name | test(\"flow|agentctl\") | not) and (.name|match(\"agent-darwin-$ARCH.zip$\"))) | .browser_download_url" | tr -d '"')
+      DOWNLOAD_URL=$(curl -s https://api.github.com/repos/grafana/agent/releases/latest | jq ".assets[] | select((.name | test(\"flow|agentctl\") | not) and (.name|match(\"darwin-$ARCH.zip$\"))) | .browser_download_url" | tr -d '"')
       curl -LO "$DOWNLOAD_URL"
       # extract the binary
       unzip "grafana-agent-darwin-$ARCH.zip"
@@ -315,6 +315,9 @@ metrics:
       - url: $metricsEndpoint
         authorization:
           credentials: $key
+  configs:
+    - name: default
+      scrape_configs:
 integrations:
   agent:
     enabled: true
@@ -372,12 +375,6 @@ while true; do
     echo "Invalid input. Please enter y or n."
   fi
 done
-
-# Ensure node exporter is enabled
-if [ "$(yq e '.integrations.node_exporter.enabled' "$CONFIG")" != "true" ]; then
-    yq -i e '.integrations.node_exporter.enabled |= true | .integrations.node_exporter.include_exporter_metrics |= true | .integrations.node_exporter.disable_collectors = ["mdadm"] | .integrations.node_exporter.disable_collectors[0] style="double"' "$CONFIG"
-    echo "Node exporter integration enabled"
-fi
 
 # Detect MySQL
 if (ss -ltn | grep -qE :3306) || [ -n "${mysql_connection_string}" ]; then
@@ -512,6 +509,41 @@ if (ss -ltn | grep -qE :5432) || [ -n "${postgres_connection_string}" ]; then
   else
     echo "Postgres integration enabled"
   fi
+fi
+
+if [ -n "${scrape_jobs}" ] && [ -n "${scrape_targets}" ]; then
+  # Split the variables into arrays
+  IFS=", " read -ra scrapeJobs <<< "${scrape_jobs//\"/}"
+  IFS=", " read -ra scrapeTargets <<< "${scrape_targets//\"/}"
+
+  # Add the jobs and targets to the config
+  for i in "${!scrapeJobs[@]}"; do
+    yq -i e '.metrics.configs[0].scrape_configs += [{"job_name": "'"${scrapeJobs[i]}"'", "static_configs": [{"targets": ["'"${scrapeTargets[i]}"'"]}]}]' "$CONFIG"
+  done
+  echo "Scrape endpoints added"
+fi
+
+if [ "$PROMPT" != false ]; then
+  while true; do
+      echo "Is there an additional endpoint you would like to scrape? (y/n)"
+      read -r ans
+      ans=${ans,,}
+      if [ "$ans" = "y" ]; then
+        echo "Enter the name of the service being scraped: "
+        read -r scrapeJob
+        echo "Enter the target to be scraped: "
+        read -r scrapeTarget
+
+        if [ -z "$scrapeJob" ] || [ -z "$scrapeTarget" ]; then
+          echo "Fields cannot be empty"
+        else
+          # Add the endpoint to the config
+          yq -i e '.metrics.configs[0].scrape_configs += [{"job_name": "'"$scrapeJob"'", "static_configs": [{"targets": ["'"$scrapeTarget"'"]}]}]' "$CONFIG"
+        fi
+      elif [ "$ans" = "n" ]; then
+        break
+      fi
+  done
 fi
 
 echo "Config file updated";

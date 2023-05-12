@@ -104,6 +104,9 @@ metrics:
       - url: '$metricsEndpoint'
         authorization:
           credentials: '$key'
+  configs:
+    - name: default
+      scrape_configs:
 integrations:
   agent:
     enabled: true
@@ -401,6 +404,61 @@ if ((Get-NetTCPConnection).LocalPort -contains 5432 -or $env:postgres_connection
             connection_string = $postgresDatasource
         })
         Write-Output "Postgres integration enabled"
+    }
+}
+
+if ($env:scrape_jobs -and $env:scrape_targets) {
+    # Split the variables into arrays
+    $scrapeJobs = $env:scrape_jobs.Trim('"') -split ", "
+    $scrapeTargets = $env:scrape_targets.Trim('"') -split ", "
+
+    # Add the jobs and targets to the config
+    for ($i=0; $i -lt $scrapeJobs.Length; $i++) {
+        # Add the endpoint to the config
+        $scrapeConfigs += ,([ordered]@{
+            job_name = $($scrapeJobs[$i])
+            static_configs = @(
+            @{
+                targets = @(
+                $($scrapeTargets[$i])
+                )
+            }
+            )
+        })
+    }
+    $configContent.metrics.configs[0].scrape_configs = $scrapeConfigs
+    Write-Host "Scrape endpoints added"
+}
+
+while ($true)
+{
+    $ans = Read-Host "Is there an additional endpoint you would like to scrape? (y/n)" | ForEach-Object { $_.ToLower() }
+    if ($ans -eq "y") {
+        $endpointName = Read-Host "Enter the name of the service being scraped"
+        $endpointTarget = Read-Host "Enter the target to be scraped"
+        if ([string]::IsNullOrWhiteSpace($endpointName) -or [string]::IsNullOrWhiteSpace($endpointTarget))
+        {
+            Write-Host "Fields cannot be empty"
+        }
+        else
+        {
+            # Add the endpoint to the config
+            $scrapeConfigs += ,([ordered]@{
+                job_name = $endpointName
+                static_configs = @(
+                @{
+                    targets = @(
+                    $endpointTarget
+                    )
+                }
+                )
+            })
+        }
+        $configContent.metrics.configs[0].scrape_configs = $scrapeConfigs
+    } elseif ($ans -eq "n") {
+        break
+    } else {
+        Write-Output "Invalid input. Please enter y or n."
     }
 }
 
