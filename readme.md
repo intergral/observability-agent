@@ -102,6 +102,16 @@ If you wish to enable log collection, the following environment variables must b
 | `service_name`     | `string` | Set a name for you log collection service       |
 | `log_path`         | `string` | Set a file path for your log collection service |
 
+### Scraping from additional exporters
+At present, there are some integrations we don't support out the box. Use of these integrations is via a scrape endpoint.
+To scrape these exporters, you can use the following environment variables to set a list of exporters and their corresponding endpoints to be scraped.
+The list must be wrapped in double quotes and each value must be separated by a comma and a space.
+
+| Variable         | Type     | Example                                  | Description                         |
+|------------------|----------|------------------------------------------|-------------------------------------|
+| `scrape_jobs`    | `string` | `"nginxexporter, iisexporter"`           | List of exporters to be scraped     |
+| `scrape_targets` | `string` | `"nginxexporter:9113, iisexporter:1234"` | List of endpoints for the exporters |
+
 ### .Env Files
 
 If you wish to use an environment file to set environment variables, rather than setting them as system environment variables,
