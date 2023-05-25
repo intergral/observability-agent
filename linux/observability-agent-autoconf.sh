@@ -501,7 +501,10 @@ if (ss -ltn | grep -qE :5432) || [ -n "${postgres_connection_string}" ]; then
       echo "Postgres credentials not found"
     fi
   else
-    yq -i e '.integrations.postgres_exporter.enabled |= true, .integrations.postgres_exporter.data_source_names |= "'"${postgres_connection_string}"'"' "$CONFIG"
+    IFS=, read -ra connection_strings <<< "$postgres_connection_string"
+    data_sources=$(IFS=, ; printf '"%s", ' "${connection_strings[@]}")
+    data_sources=${data_sources%, }  # Remove trailing comma and space
+    yq -i e '.integrations.postgres_exporter.enabled |= true, .integrations.postgres_exporter.data_source_names |= ['"$data_sources"']' "$CONFIG"
   fi
   if [ -n "${postgres_disabled}" ] && [ "${postgres_disabled}" = true ]; then
     yq -i e '.integrations.postgres_exporter.enabled |= false' "$CONFIG"
