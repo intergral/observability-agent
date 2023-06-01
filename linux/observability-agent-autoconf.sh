@@ -83,16 +83,11 @@ if [ "$(uname -m)" = "x86_64" ]; then
   ARCH=amd64
 elif [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then
   ARCH=arm64
-elif [ "$(uname -m)" = "armv6l" ] || [ "$(uname -m)" = "armv6" ]; then
+elif [ "$(uname -m)" = "armv6l" ] || [ "$(uname -m)" = "armv6" ] && [ $OS != "macOS" ]; then
   ARCH=armv6
-elif [ "$(uname -m)" = "armv7l" ] || [ "$(uname -m)" = "armv7" ]; then
+elif [ "$(uname -m)" = "armv7l" ] || [ "$(uname -m)" = "armv7" ] && [ $OS != "macOS" ]; then
   ARCH=armv7
 else
-  ARCH=unsupported
-fi
-
-# Only amd64 and arm64 available for mac
-if { [ $ARCH = armv6 ] || [ $ARCH = armv6 ]; } && [ $OS = "macOS" ]; then
   ARCH=unsupported
 fi
 
@@ -108,12 +103,14 @@ fi
 
 # Check if curl is installed
 if ! which curl >/dev/null; then
-    echo "Installing curl..."
     if [ "$OS" = "Debian" ]; then
+      echo "Installing curl..."
       apt -y install curl
     elif [ "$OS" = "RedHat" ]; then
+      echo "Installing curl..."
       yum -y install curl
     elif [ "$OS" = "SUSE" ]; then
+      echo "Installing curl..."
       zypper -y install curl
     elif [ "$OS" = "macOS" ]; then
       echo "curl required"
@@ -126,13 +123,35 @@ fi
 
 # Check if tar is installed
 if ! which tar >/dev/null; then
-    echo "Installing tar..."
     if [ "$OS" = "Debian" ]; then
+      echo "Installing tar..."
       apt -y install tar
     elif [ "$OS" = "RedHat" ]; then
+      echo "Installing tar..."
       yum -y install tar
     elif [ "$OS" = "SUSE" ]; then
+      echo "Installing tar..."
       zypper -y install tar
+    elif [ "$OS" = "macOS" ]; then
+      echo "tar required"
+      exit 1
+    else
+      echo "OS not supported"
+      exit 1
+    fi
+fi
+
+# Check if iproute2 is installed (required for ss command)
+if ! which ss >/dev/null; then
+    if [ "$OS" = "Debian" ]; then
+      echo "Installing iproute2..."
+      apt -y install iproute2
+    elif [ "$OS" = "RedHat" ]; then
+      echo "Installing iproute2..."
+      yum -y install iproute2
+    elif [ "$OS" = "SUSE" ]; then
+      echo "Installing iproute2..."
+      zypper -y install iproute2
     elif [ "$OS" = "macOS" ]; then
       echo "iproute2mac required"
       exit 1
@@ -142,37 +161,16 @@ if ! which tar >/dev/null; then
     fi
 fi
 
-# Check if iproute2 is installed (required for ss command)
-if [ "$OS" = "macOS" ]; then
-  if ! which iproute2mac >/dev/null; then
-    echo "iproute2mac required"
-    exit 1
-  fi
-else
-  if ! which ss >/dev/null; then
-      echo "Installing iproute2..."
-      if [ "$OS" = "Debian" ]; then
-        apt -y install iproute2
-      elif [ "$OS" = "RedHat" ]; then
-        yum -y install iproute2
-      elif [ "$OS" = "SUSE" ]; then
-        zypper -y install iproute2
-      else
-        echo "OS not supported"
-        exit 1
-      fi
-  fi
-fi
-
-
 # Check if jq is installed
 if ! which jq >/dev/null; then
-    echo "Installing jq..."
     if [ "$OS" = "Debian" ]; then
+      echo "Installing jq..."
       apt -y install jq
     elif [ "$OS" = "RedHat" ]; then
+      echo "Installing jq..."
       yum -y install jq
     elif [ "$OS" = "SUSE" ]; then
+      echo "Installing jq..."
       zypper -y install jq
     elif [ "$OS" = "macOS" ]; then
       echo "jq required"
@@ -448,10 +446,10 @@ if (ss -ltn | grep -qE :1433) || [ -n "${mssql_connection_string}" ]; then
             break
           fi
       done
-      yq -i e '.integrations.mssql.enabled |= true, .integrations.mssql.connection_string |= "sqlserver://'"$user"':'"$pass"'@1433:1433" | .integrations.mssql.connection_string style="double"' "$CONFIG"
+      yq -i e '.integrations.mssql.enabled |= true, .integrations.mssql.connection_string |= "sqlserver://'"$user"':'"$pass"'@127.0.0.1:1433" | .integrations.mssql.connection_string style="double"' "$CONFIG"
     elif [ "${mssql_user}" ] && [ "${mssql_password}" ]; then
       echo "MSSQL credentials found";
-      yq -i e '.integrations.mssql.enabled |= true, .integrations.mssql.connection_string |= "sqlserver://'"${mssql_user}"':'"${mssql_password}"'@1433:1433" | .integrations.mssql.connection_string style="double"' "$CONFIG"
+      yq -i e '.integrations.mssql.enabled |= true, .integrations.mssql.connection_string |= "sqlserver://'"${mssql_user}"':'"${mssql_password}"'@127.0.0.1:1433" | .integrations.mssql.connection_string style="double"' "$CONFIG"
     else
       echo "MSSQL credentials not found"
     fi
@@ -493,10 +491,10 @@ if (ss -ltn | grep -qE :5432) || [ -n "${postgres_connection_string}" ]; then
             break
           fi
       done
-      yq -i e '.integrations.postgres_exporter.enabled |= true, .integrations.postgres_exporter.data_source_names |= ["postgresql://'"$user"':'"$pass"'@127.0.0.1:5432/shop?sslmode=disable"] | .integrations.postgres_exporter.data_source_names[0] style="double"' "$CONFIG"
+      yq -i e '.integrations.postgres_exporter.enabled |= true, .integrations.postgres_exporter.data_source_names |= ["postgresql://'"$user"':'"$pass"'@127.0.0.1:5432/postgres?sslmode=disable"] | .integrations.postgres_exporter.data_source_names[0] style="double"' "$CONFIG"
     elif [ "${postgres_user}" ] && [ "${postgres_password}" ]; then
       echo "Postgres credentials found";
-      yq -i e '.integrations.postgres_exporter.enabled |= true, .integrations.postgres_exporter.data_source_names |= ["postgresql://'"${postgres_user}"':'"${postgres_password}"'@127.0.0.1:5432/shop?sslmode=disable"] | .integrations.postgres_exporter.data_source_names[0] style="double"' "$CONFIG"
+      yq -i e '.integrations.postgres_exporter.enabled |= true, .integrations.postgres_exporter.data_source_names |= ["postgresql://'"${postgres_user}"':'"${postgres_password}"'@127.0.0.1:5432/postgres?sslmode=disable"] | .integrations.postgres_exporter.data_source_names[0] style="double"' "$CONFIG"
     else
       echo "Postgres credentials not found"
     fi
