@@ -69,7 +69,7 @@ elif [ -f /etc/SuSE-release ] || [ "$DISTRIBUTION" = "SUSE" ] || [ "$DISTRIBUTIO
     OS="SUSE"
 # Mac doesn't have a release file
 elif [ -x "$(command -v sw_vers)" ] || [ "$DISTRIBUTION" = "Darwin" ]; then
-  OS="macOS"
+  #OS="macOS"
   echo "Mac not currently supported"
   exit 1
 else
