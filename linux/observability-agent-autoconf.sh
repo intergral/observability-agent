@@ -561,6 +561,6 @@ if [ "${asBinary}" = true ]; then
 elif [ "$PROMPT" != false ]; then
   mv $CONFIG /etc/grafana-agent.yaml
   echo "Config file can be found at /etc/grafana-agent.yaml"
-#  systemctl start grafana-agent.service
-#  echo "Grafana Agent started"
+  systemctl start grafana-agent.service
+  echo "Grafana Agent started"
 fi
