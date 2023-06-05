@@ -491,10 +491,10 @@ if (ss -ltn | grep -qE :5432) || [ -n "${postgres_connection_string}" ]; then
             break
           fi
       done
-      yq -i e '.integrations.postgres_exporter.enabled |= true, .integrations.postgres_exporter.data_source_names |= ["postgresql://'"$user"':'"$pass"'@127.0.0.1:5432/postgres?sslmode=disable"] | .integrations.postgres_exporter.data_source_names[0] style="double"' "$CONFIG"
+      yq -i e '(.integrations.postgres_exporter.enabled |= true, .integrations.postgres_exporter.data_source_names |= ["postgresql://'"$user"':'"$pass"'@127.0.0.1:5432/postgres?sslmode=disable"]) | (.integrations.postgres_exporter.autodiscover_databases |= true) | .integrations.postgres_exporter.data_source_names[0] style="double"' "$CONFIG"
     elif [ "${postgres_user}" ] && [ "${postgres_password}" ]; then
       echo "Postgres credentials found";
-      yq -i e '.integrations.postgres_exporter.enabled |= true, .integrations.postgres_exporter.data_source_names |= ["postgresql://'"${postgres_user}"':'"${postgres_password}"'@127.0.0.1:5432/postgres?sslmode=disable"] | .integrations.postgres_exporter.data_source_names[0] style="double"' "$CONFIG"
+      yq -i e '(.integrations.postgres_exporter.enabled |= true, .integrations.postgres_exporter.data_source_names |= ["postgresql://'"${postgres_user}"':'"${postgres_password}"'@127.0.0.1:5432/postgres?sslmode=disable"]) | (.integrations.postgres_exporter.autodiscover_databases |= true) | .integrations.postgres_exporter.data_source_names[0] style="double"' "$CONFIG"
     else
       echo "Postgres credentials not found"
     fi
@@ -502,7 +502,11 @@ if (ss -ltn | grep -qE :5432) || [ -n "${postgres_connection_string}" ]; then
     IFS=, read -ra connection_strings <<< "$postgres_connection_string"
     data_sources=$(IFS=, ; printf '"%s", ' "${connection_strings[@]}")
     data_sources=${data_sources%, }  # Remove trailing comma and space
-    yq -i e '.integrations.postgres_exporter.enabled |= true, .integrations.postgres_exporter.data_source_names |= ['"$data_sources"']' "$CONFIG"
+    #yq -i e '.integrations.postgres_exporter.enabled |= true, .integrations.postgres_exporter.data_source_names |= ['"$data_sources"'], .integrations.postgres_exporter.autodiscover_databases |= true' "$CONFIG"
+#    yq -i e '.integrations.postgres_exporter.enabled |= true, .integrations.postgres_exporter.data_source_names |= ['"$data_sources"']' "$CONFIG"
+#    yq -i e '.integrations.postgres_exporter.autodiscover_databases |= true' "$CONFIG"
+    yq -i e '(.integrations.postgres_exporter.enabled |= true, .integrations.postgres_exporter.data_source_names |= ['"$data_sources"']) | (.integrations.postgres_exporter.autodiscover_databases |= true)' "$CONFIG"
+
   fi
   if [ -n "${postgres_disabled}" ] && [ "${postgres_disabled}" = true ]; then
     yq -i e '.integrations.postgres_exporter.enabled |= false' "$CONFIG"
@@ -557,6 +561,6 @@ if [ "${asBinary}" = true ]; then
 elif [ "$PROMPT" != false ]; then
   mv $CONFIG /etc/grafana-agent.yaml
   echo "Config file can be found at /etc/grafana-agent.yaml"
-  systemctl start grafana-agent.service
-  echo "Grafana Agent started"
+#  systemctl start grafana-agent.service
+#  echo "Grafana Agent started"
 fi
