@@ -380,13 +380,13 @@ if ((Get-NetTCPConnection).LocalPort -contains 5432 -or $env:postgres_connection
                 }
             }
 
-            $postgresDatasource = "postgresql://${user}:${passText}@127.0.0.1:5432/shop?sslmode=disable"
+            $postgresDatasource = "postgresql://${user}:${passText}@127.0.0.1:5432/postgres?sslmode=disable"
 
         }
         else
         {
             Write-Output "Postgres credentials found"
-            $postgresDatasource = "postgresql://${env:postgres_user}:${env:postgres_password}@127.0.0.1:5432/shop?sslmode=disable"
+            $postgresDatasource = "postgresql://${env:postgres_user}:${env:postgres_password}@127.0.0.1:5432/postgres?sslmode=disable"
         }
     } else {
         $postgresDatasource = $env:postgres_connection_string
