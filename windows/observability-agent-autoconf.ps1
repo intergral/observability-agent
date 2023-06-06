@@ -391,17 +391,22 @@ if ((Get-NetTCPConnection).LocalPort -contains 5432 -or $env:postgres_connection
     } else {
         $postgresDatasource = $env:postgres_connection_string
     }
+    # Format data sources
+    $postgresDatasource = $postgresDatasource -replace '"([^"]+)"', '$1' -split ',\s*'
+
     # Add integration
     if ($env:postgres_disabled -eq $true) {
         $integrationProperties.Add('postgres_exporter', [ordered]@{
             enabled = $false
-            connection_string = $postgresDatasource
+            data_source_names = $postgresDatasource
+            autodiscover_databases = $true
         })
         Write-Output "Postgres integration configured"
     } else {
         $integrationProperties.Add('postgres_exporter', [ordered]@{
             enabled = $true
-            connection_string = $postgresDatasource
+            data_source_names = $postgresDatasource
+            autodiscover_databases = $true
         })
         Write-Output "Postgres integration enabled"
     }
