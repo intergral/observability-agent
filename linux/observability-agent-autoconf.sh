@@ -513,6 +513,22 @@ if (ss -ltn | grep -qE :5432) || [ -n "${postgres_connection_string}" ]; then
   fi
 fi
 
+#Detect RabbitMQ
+if (ss -ltn | grep -qE :5672) || [ -n "${rabbitmq_scrape_target}" ]; then
+  echo "RabbitMQ detected"
+  if [ "${rabbitmq_disabled}" != true ]; then
+    if ! (ss -ltn | grep -qE :15692); then
+      echo "RabbitMQ exporter is not enabled, see the Observability Agent docs to learn how to enable it"
+    fi
+    if [ -n "${rabbitmq_scrape_target}" ]; then
+      yq -i e '.metrics.configs[0].scrape_configs += [{"job_name": "rabbitmqexporter", "static_configs": [{"targets": ['"${rabbitmq_scrape_target}"']}]}]' "$CONFIG"
+    else
+      yq -i e '.metrics.configs[0].scrape_configs += [{"job_name": "rabbitmqexporter", "static_configs": [{"targets": ["rabbitmqexporter:5672"]}]}]' "$CONFIG"
+    fi
+    echo "RabbitMQ scrape endpoint added"
+  fi
+fi
+
 if [ -n "${scrape_jobs}" ] && [ -n "${scrape_targets}" ]; then
   # Split the variables into arrays
   IFS=", " read -ra scrapeJobs <<< "${scrape_jobs//\"/}"
@@ -544,6 +560,8 @@ if [ "$PROMPT" != false ]; then
         fi
       elif [ "$ans" = "n" ]; then
         break
+      else
+        echo "Invalid input. Please enter y or n."
       fi
   done
 fi
