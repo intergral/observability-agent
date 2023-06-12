@@ -412,6 +412,44 @@ if ((Get-NetTCPConnection).LocalPort -contains 5432 -or $env:postgres_connection
     }
 }
 
+#Detect RabbitMQ
+if ((Get-NetTCPConnection).LocalPort -contains 5672 -or $env:rabbitmq_scrape_target) {
+    Write-Output "RabbitMQ detected"
+    if ($env:rabbitmq_disabled -eq $true) {
+        if (!(Get-NetTCPConnection).LocalPort -contains 15692) {
+            Write-Output "RabbitMQ exporter is not enabled, see the Observability Agent docs to learn how to enable it"
+        }
+        if ($env:rabbitmq_scrape_target)
+        {
+            # Add the endpoint to the config
+            $scrapeConfigs += ,([ordered]@{
+                job_name = "rabbitmqexporter"
+                static_configs = @(
+                @{
+                    targets = @(
+                    $env:rabbitmq_scrape_target
+                    )
+                }
+                )
+            })
+        } else {
+            # Add the endpoint to the config
+            $scrapeConfigs += ,([ordered]@{
+                job_name = "rabbitmqexporter"
+                static_configs = @(
+                @{
+                    targets = @(
+                    "rabbitmqexporter:5672"
+                    )
+                }
+                )
+            })
+        }
+        $configContent.metrics.configs[0].scrape_configs = $scrapeConfigs
+        Write-Output "RabbitMQ scrape endpoint added"
+    }
+}
+
 if ($env:scrape_jobs -and $env:scrape_targets) {
     # Split the variables into arrays
     $scrapeJobs = $env:scrape_jobs.Trim('"') -split ", "
