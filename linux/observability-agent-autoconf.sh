@@ -513,7 +513,7 @@ if (ss -ltn | grep -qE :5432) || [ -n "${postgres_connection_string}" ]; then
   fi
 fi
 
-#Detect RabbitMQ
+# Detect RabbitMQ
 if (ss -ltn | grep -qE :5672) || [ -n "${rabbitmq_scrape_target}" ]; then
   echo "RabbitMQ detected"
   if [ "${rabbitmq_disabled}" != true ]; then
@@ -526,6 +526,23 @@ if (ss -ltn | grep -qE :5672) || [ -n "${rabbitmq_scrape_target}" ]; then
       yq -i e '.metrics.configs[0].scrape_configs += [{"job_name": "rabbitmqexporter", "static_configs": [{"targets": ["rabbitmqexporter:5672"]}]}]' "$CONFIG"
     fi
     echo "RabbitMQ scrape endpoint added"
+  fi
+fi
+
+# Detect Redis
+if (ss -ltn | grep -qE :6379) || [ -n "${redis_connection_string}" ]; then
+  echo "Redis detected"
+  # Check if connection string already set in environment
+  if [ -z "${redis_connection_string}" ]; then
+    yq -i e '.integrations.redis_exporter.enabled |= true, .integrations.redis_exporter.redis_addr |= "127.0.0.1:6379"' "$CONFIG"
+  else
+    yq -i e '.integrations.redis_exporter.enabled |= true, .integrations.redis_exporter.redis_addr |= "'"${redis_connection_string}"'"' "$CONFIG"
+  fi
+  if [ -n "${redis_disabled}" ] && [ "${redis_disabled}" = true ]; then
+    yq -i e '.integrations.redis_exporter.enabled |= false' "$CONFIG"
+    echo "Redis integration configured"
+  else
+    echo "Redis integration enabled"
   fi
 fi
 
@@ -557,6 +574,7 @@ if [ "$PROMPT" != false ]; then
         else
           # Add the endpoint to the config
           yq -i e '.metrics.configs[0].scrape_configs += [{"job_name": "'"$scrapeJob"'", "static_configs": [{"targets": ["'"$scrapeTarget"'"]}]}]' "$CONFIG"
+          echo "Scrape endpoint added"
         fi
       elif [ "$ans" = "n" ]; then
         break
