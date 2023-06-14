@@ -450,6 +450,33 @@ if ((Get-NetTCPConnection).LocalPort -contains 5672 -or $env:rabbitmq_scrape_tar
     }
 }
 
+# Detect Redis
+if ((Get-NetTCPConnection).LocalPort -contains 6379 -or $env:redis_connection_string){
+    Write-Host "Redis detected"
+    # Check if connection string already set in environment
+    if (-not $env:redis_connection_string)
+    {
+        $redisDatasource = "127.0.0.1:6379"
+    } else {
+        $redisDatasource = $env:redis_connection_string
+    }
+
+    # Add integration
+    if ($env:redis_disabled -eq $true) {
+        $integrationProperties.Add('redis_exporter', [ordered]@{
+            enabled = $false
+            redis_addr = $redisDatasource
+        })
+        Write-Output "Redis integration configured"
+    } else {
+        $integrationProperties.Add('redis_exporter', [ordered]@{
+            enabled = $true
+            redis_addr = $redisDatasource
+        })
+        Write-Output "Redis integration enabled"
+    }
+}
+
 if ($env:scrape_jobs -and $env:scrape_targets) {
     # Split the variables into arrays
     $scrapeJobs = $env:scrape_jobs.Trim('"') -split ", "
