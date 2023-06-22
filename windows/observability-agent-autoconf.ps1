@@ -477,6 +477,38 @@ if ((Get-NetTCPConnection).LocalPort -contains 6379 -or $env:redis_connection_st
     }
 }
 
+# Detect Kafka
+if ((Get-NetTCPConnection).LocalPort -contains 9092 -or $env:kafka_connection_string)
+{
+    Write-Host "Kafka detected"
+
+    # Check if connection string already set in environment
+    if (-not $env:kafka_connection_string)
+    {
+        $kafkaDatasource = "127.0.0.1:9092"
+    } else {
+        $kafkaDatasource = $env:kafka_connection_string
+    }
+
+    # Add integration
+    if ($env:kafka_disabled -eq $true)
+    {
+        $integrationProperties.Add('kafka_exporter', [ordered]@{
+            enabled = $false
+            kafka_uris = @($kafkaDatasource)
+        })
+        Write-Output "Kafka integration configured"
+    }
+    else
+    {
+        $integrationProperties.Add('kafka_exporter', [ordered]@{
+            enabled = $true
+            kafka_uris = @($kafkaDatasource)
+        })
+        Write-Output "Kafka integration enabled"
+    }
+}
+
 if ($env:scrape_jobs -and $env:scrape_targets) {
     # Split the variables into arrays
     $scrapeJobs = $env:scrape_jobs.Trim('"') -split ", "

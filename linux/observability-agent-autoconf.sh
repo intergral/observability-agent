@@ -546,6 +546,23 @@ if (ss -ltn | grep -qE :6379) || [ -n "${redis_connection_string}" ]; then
   fi
 fi
 
+# Detect Kafka
+if (ss -ltn | grep -qE :9092) || [ -n "${kafka_connection_string}" ]; then
+  echo "Kafka detected"
+  # Check if connection string already set in environment
+  if [ -z "${kafka_connection_string}" ]; then
+    yq -i e '.integrations.kafka_exporter.enabled |= true, .integrations.kafka_exporter.kafka_uris |= ["127.0.0.1:9092"]' "$CONFIG"
+  else
+    yq -i e '.integrations.kafka_exporter.enabled |= true, .integrations.kafka_exporter.kafka_uris |= "'"${kafka_connection_string}"'"' "$CONFIG"
+  fi
+  if [ -n "${kafka_disabled}" ] && [ "${kafka_disabled}" = true ]; then
+    yq -i e '.integrations.kafka_exporter.enabled |= false' "$CONFIG"
+    echo "Kafka integration configured"
+  else
+    echo "Kafka integration enabled"
+  fi
+fi
+
 if [ -n "${scrape_jobs}" ] && [ -n "${scrape_targets}" ]; then
   # Split the variables into arrays
   IFS=", " read -ra scrapeJobs <<< "${scrape_jobs//\"/}"
