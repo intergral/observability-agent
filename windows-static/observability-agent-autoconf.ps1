@@ -415,7 +415,7 @@ if ((Get-NetTCPConnection).LocalPort -contains 5432 -or $env:postgres_connection
 #Detect RabbitMQ
 if ((Get-NetTCPConnection).LocalPort -contains 5672 -or $env:rabbitmq_scrape_target) {
     Write-Output "RabbitMQ detected"
-    if ($env:rabbitmq_disabled -eq $true) {
+    if (!($env:rabbitmq_disabled -eq $true)) {
         if (!(Get-NetTCPConnection).LocalPort -contains 15692) {
             Write-Output "RabbitMQ exporter is not enabled, see the Observability Agent docs to learn how to enable it"
         }
