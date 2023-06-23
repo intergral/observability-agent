@@ -326,6 +326,7 @@ integrations:
       - "mdadm"
 EOF
 
+# Enable log collection
 while true; do
     if [ "$PROMPT" != false ] && [ -z "${log_collection}" ]; then
       echo "Is there a service you want to enable log collection for? (y/n)"
@@ -546,6 +547,7 @@ if (ss -ltn | grep -qE :6379) || [ -n "${redis_connection_string}" ]; then
   fi
 fi
 
+# Add Additional Endpoints
 if [ -n "${scrape_jobs}" ] && [ -n "${scrape_targets}" ]; then
   # Split the variables into arrays
   IFS=", " read -ra scrapeJobs <<< "${scrape_jobs//\"/}"
@@ -574,7 +576,6 @@ if [ "$PROMPT" != false ]; then
         else
           # Add the endpoint to the config
           yq -i e '.metrics.configs[0].scrape_configs += [{"job_name": "'"$scrapeJob"'", "static_configs": [{"targets": ["'"$scrapeTarget"'"]}]}]' "$CONFIG"
-          echo "Scrape endpoint added"
         fi
       elif [ "$ans" = "n" ]; then
         break
