@@ -21,7 +21,7 @@
            password: ${{ secrets.DOCKER_PASSWORD }}
        - name: Build Static Images
          working-directory: ./linux-static
-         run: docker buildx build --platform linux/amd64,linux/arm64 -t intergral/observability-agent-testing:latest --push .
+         run: docker buildx build --platform linux/amd64,linux/arm64 -t intergral/observability-agent:latest --push .
        - name: Build Flow Images
          working-directory: ./linux-flow
-         run: docker buildx build --platform linux/amd64,linux/arm64 -t intergral/observability-agent-testing:flow --push .
+         run: docker buildx build --platform linux/amd64,linux/arm64 -t intergral/observability-agent:flow --push .
