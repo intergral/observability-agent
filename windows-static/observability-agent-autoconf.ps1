@@ -477,6 +477,104 @@ if ((Get-NetTCPConnection).LocalPort -contains 6379 -or $env:redis_connection_st
     }
 }
 
+# Detect Kafka
+if ((Get-NetTCPConnection).LocalPort -contains 9092 -or $env:kafka_connection_string)
+{
+    Write-Host "Kafka detected"
+
+    # Check if connection string already set in environment
+    if (-not $env:kafka_connection_string)
+    {
+        $kafkaDatasource = "127.0.0.1:9092"
+    } else {
+        $kafkaDatasource = $env:kafka_connection_string
+    }
+
+    # Add integration
+    if ($env:kafka_disabled -eq $true)
+    {
+        $integrationProperties.Add('kafka_exporter', [ordered]@{
+            enabled = $false
+            kafka_uris = @($kafkaDatasource)
+        })
+        Write-Output "Kafka integration configured"
+    }
+    else
+    {
+        $integrationProperties.Add('kafka_exporter', [ordered]@{
+            enabled = $true
+            kafka_uris = @($kafkaDatasource)
+        })
+        Write-Output "Kafka integration enabled"
+    }
+}
+
+# Detect Elasticsearch
+if ((Get-NetTCPConnection).LocalPort -contains 9200 -or $env:elasticsearch_connection_string)
+{
+    Write-Host "Elasticsearch detected"
+    # Check if connection string already set in environment
+    if (-not $env:elasticsearch_connection_string)
+    {
+        # Check if credentials already set in environment
+        if (-not $env:elasticsearch_user -or -not $env:elasticsearch_password)
+        {
+            Write-Host "Elasticsearch credentials not found"
+            while ($true)
+            {
+                Write-Host "Enter your username:"
+                $user = Read-Host
+                if ( [string]::IsNullOrWhiteSpace($user))
+                {
+                    Write-Host "Username cannot be empty. Please enter a valid username."
+                }
+                else
+                {
+                    break
+                }
+            }
+
+            while ($true)
+            {
+                Write-Host "Enter your password:"
+                $pass = Read-Host -AsSecureString
+                $passText = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($pass))
+                if ( [string]::IsNullOrWhiteSpace($passText))
+                {
+                    Write-Host "Password cannot be empty. Please enter a valid password."
+                }
+                else
+                {
+                    break
+                }
+            }
+            $esDatasource = "http://${user}:${passText}@localhost:9200"
+        }
+        else
+        {
+            Write-Output "Elasticsearch credentials found"
+            $esDatasource = "http://${env:elasticsearch_user}:${env:elasticsearch_password}@localhost:9200"
+        }
+    } else {
+        $esDatasource = $env:elasticsearch_connection_string
+    }
+
+    # Add integration
+    if ($env:elasticsearch_disabled -eq $true) {
+        $integrationProperties.Add('elasticsearch_exporter', [ordered]@{
+            enabled = $false
+            address = $esDatasource
+        })
+        Write-Output "Elasticsearch integration configured"
+    } else {
+        $integrationProperties.Add('elasticsearch_exporter', [ordered]@{
+            enabled = $true
+            address = $esDatasource
+        })
+        Write-Output "Elasticsearch integration enabled"
+    }
+}
+
 if ($env:scrape_jobs -and $env:scrape_targets) {
     # Split the variables into arrays
     $scrapeJobs = $env:scrape_jobs.Trim('"') -split ", "
