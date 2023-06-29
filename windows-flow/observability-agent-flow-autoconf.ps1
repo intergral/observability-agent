@@ -37,10 +37,10 @@ if ($INSTALL -ne $false) {
     $release = Invoke-RestMethod -Uri $uri
 
     # Extract the download URL for the Windows installer from the release assets
-    $url = ($release.assets | Where-Object { $_.name -like "grafana-agent-installer.exe.zip" }).browser_download_url
+    $url = ($release.assets | Where-Object { $_.name -like "grafana-agent-flow-installer.exe.zip" }).browser_download_url
 
-    $outputPath = "$PSScriptRoot/grafana-agent-installer.exe.zip"
-    $installPath = "$PSScriptRoot/grafana-agent-installer.exe"
+    $outputPath = "$PSScriptRoot/grafana-agent-flow-installer.exe.zip"
+    $installPath = "$PSScriptRoot/grafana-agent-flow-installer.exe"
 
     # Download the file
     Invoke-WebRequest -Uri $url -OutFile $outputPath
@@ -49,7 +49,7 @@ if ($INSTALL -ne $false) {
     Expand-Archive -Path $outputPath -DestinationPath $installPath -Force
 
     # Run the installer
-    Start-Process "$installPath\grafana-agent-installer.exe"
+    Start-Process "$installPath\grafana-agent-flow-installer.exe"
 }
 
 #Check if an env file exists
@@ -69,7 +69,7 @@ if (($CONFIG) -and (Test-Path $CONFIG -PathType Leaf)) {
     Copy-Item -Path "$CONFIG" -Destination "$CONFIG.bak" -Force -PassThru | Out-Null
 } else {
     Write-Output "No pre-existing config file found"
-    $CONFIG="grafana-agent.yaml"
+    $CONFIG="grafana-agent-flow.river"
     Write-Output "Creating configuration file: $CONFIG"
 }
 
@@ -94,30 +94,38 @@ else
 }
 
 # Create config file
+# Enable prometheus remote write component and logging component
 @"
-server:
-  log_level: warn
-metrics:
-  global:
-    scrape_interval: 15s
-    remote_write:
-      - url: '$metricsEndpoint'
-        authorization:
-          credentials: '$key'
-  configs:
-    - name: default
-      scrape_configs:
-integrations:
-  agent:
-    enabled: true
-  windows_exporter:
-    enabled: true
-"@ | Out-File -FilePath $CONFIG
+prometheus.remote_write "default" {
+	endpoint {
+      url = "$metricsEndpoint"
+          basic_auth {
+              password = "$key"
+          }
+	}
+}
 
-# Install and import the powershell-yaml module
-Write-Output "Installing powershell-yaml module..."
-Install-Module powershell-yaml -Scope CurrentUser
-Import-Module powershell-yaml
+logging {
+  level  = "debug"
+  format = "logfmt"
+}
+
+"@ | Out-File -FilePath $CONFIG
+Write-Output "Prometheus remote write component enabled"
+
+# Enable windows exporter component
+@"
+prometheus.exporter.windows "example" {
+
+}
+
+prometheus.scrape "windows" {
+	targets    = prometheus.exporter.windows.example.targets
+	forward_to = [prometheus.remote_write.default.receiver]
+}
+
+"@ | Out-File -FilePath $CONFIG -Append
+Write-Output "Windows exporter component enabled"
 
 while ($true) {
     if (-not $env:log_collection)
@@ -160,28 +168,39 @@ while ($true) {
             $logsEndpoint="https://api.fusionreactor.io/v1/logs"
         }
 
+        if ($env:log_user)
+        {
+            $logUser=$env:log_user
+        }
+        else
+        {
+            $logUser = Read-Host "Enter your endpoint user"
+        }
+
         # Add log collection
-        $logContent = @"
-logs:
-  configs:
-    - name: default
-      positions:
-        filename: /tmp/positions.yaml
-      clients:
-        - url: '$logsEndpoint'
-          authorization:
-            credentials: '$key'
-      scrape_configs:
-        - job_name: '$job'
-          static_configs:
-            - targets:
-                - localhost
-              labels:
-                job: '$job'
-                host: localhost
-                __path__: '$path'
-"@
-        $logContent | Out-File -FilePath $CONFIG -Append
+        @"
+discovery.file "varlog" {
+  path_targets = [
+    {__path__ = "$path", job = "$job"},
+  ]
+}
+
+loki.source.file "httpd" {
+  targets    = discovery.file.varlog.targets
+  forward_to = [loki.write.lokiEndpoint.receiver]
+}
+
+loki.write "lokiEndpoint" {
+  endpoint {
+    url = "$logsEndpoint"
+    basic_auth {
+        username = "$logUser"
+            password = "$key"
+        }
+  }
+}
+
+"@ | Out-File -FilePath $CONFIG -Append
         break
     } elseif ($ans -eq "n") {
         break
@@ -189,23 +208,6 @@ logs:
         Write-Output "Invalid input. Please enter y or n."
     }
 }
-
-# Load config file
-$configContent = Get-Content -Path $CONFIG -Raw | ConvertFrom-Yaml
-
-# This also clears existing integrations but they need to be there for this to work
-$integrationProperties = [System.Collections.Specialized.OrderedDictionary]::new()
-$configContent.integrations = $integrationProperties
-
-# Enable Agent
-$integrationProperties.Add('agent', @{
-    enabled = $true
-})
-# Enable Windows exporter
-$integrationProperties.Add('windows_exporter', @{
-    enabled = $true
-})
-Write-Output "Windows exporter integration enabled"
 
 #Detect MySQL
 if ((Get-NetTCPConnection).LocalPort -contains 3306 -or $env:mysql_connection_string){
@@ -261,16 +263,19 @@ if ((Get-NetTCPConnection).LocalPort -contains 3306 -or $env:mysql_connection_st
 
     # Add integration
     if ($env:mysql_disabled -eq $true) {
-        $integrationProperties.Add('mysqld_exporter', [ordered]@{
-            enabled = $false
-            data_source_name = $myDatasource
-        })
         Write-Output "MySQL integration configured"
     } else {
-        $integrationProperties.Add('mysqld_exporter', [ordered]@{
-            enabled = $true
-            data_source_name = $myDatasource
-        })
+        @"
+prometheus.exporter.mysql "example" {
+  data_source_name = "$myDatasource"
+}
+
+prometheus.scrape "mysql" {
+  targets    = prometheus.exporter.mysql.example.targets
+  forward_to = [prometheus.remote_write.default.receiver]
+}
+
+"@ | Out-File -FilePath $CONFIG -Append
         Write-Output "MySQL integration enabled"
     }
 }
@@ -327,16 +332,19 @@ if ((Get-NetTCPConnection).LocalPort -contains 1433 -or $env:mssql_connection_st
     }
     # Add integration
     if ($env:mssql_disabled -eq $true) {
-        $integrationProperties.Add('mssql', [ordered]@{
-            enabled = $false
-            connection_string = $msDatasource
-        })
         Write-Output "MSSQL integration configured"
     } else {
-        $integrationProperties.Add('mssql', [ordered]@{
-            enabled = $true
-            connection_string = $msDatasource
-        })
+        @"
+prometheus.exporter.mssql "example" {
+  connection_string = "$msDatasource"
+}
+
+prometheus.scrape "mssql" {
+  targets    = prometheus.exporter.mssql.example.targets
+  forward_to = [prometheus.remote_write.default.receiver]
+}
+
+"@ | Out-File -FilePath $CONFIG -Append
         Write-Output "MSSQL integration enabled"
     }
 }
@@ -391,62 +399,70 @@ if ((Get-NetTCPConnection).LocalPort -contains 5432 -or $env:postgres_connection
     } else {
         $postgresDatasource = $env:postgres_connection_string
     }
-    # Format data sources
-    $postgresDatasource = $postgresDatasource -replace '"([^"]+)"', '$1' -split ',\s*'
 
     # Add integration
     if ($env:postgres_disabled -eq $true) {
-        $integrationProperties.Add('postgres_exporter', [ordered]@{
-            enabled = $false
-            data_source_names = $postgresDatasource
-            autodiscover_databases = $true
-        })
         Write-Output "Postgres integration configured"
-    } else {
-        $integrationProperties.Add('postgres_exporter', [ordered]@{
-            enabled = $true
-            data_source_names = $postgresDatasource
-            autodiscover_databases = $true
-        })
+    }
+
+    else {
+        @"
+prometheus.exporter.postgres "example" {
+    data_source_names = ["$postgresDatasource"]
+    autodiscovery {
+        enabled = true
+    }
+}
+
+prometheus.scrape "postgres" {
+  targets    = prometheus.exporter.postgres.example.targets
+  forward_to = [prometheus.remote_write.default.receiver]
+}
+
+"@ | Out-File -FilePath $CONFIG -Append
         Write-Output "Postgres integration enabled"
     }
 }
 
 #Detect RabbitMQ
-if ((Get-NetTCPConnection).LocalPort -contains 5672 -or $env:rabbitmq_scrape_target) {
+if ((Get-NetTCPConnection).LocalPort -contains 5672 -or $env:rabbitmq_scrape_target)
+{
     Write-Output "RabbitMQ detected"
-    if ($env:rabbitmq_disabled -eq $true) {
-        if (!(Get-NetTCPConnection).LocalPort -contains 15692) {
+    if (!($env:rabbitmq_disabled -eq $true))
+    {
+        if (!(Get-NetTCPConnection).LocalPort -contains 15692)
+        {
             Write-Output "RabbitMQ exporter is not enabled, see the Observability Agent docs to learn how to enable it"
         }
         if ($env:rabbitmq_scrape_target)
         {
             # Add the endpoint to the config
-            $scrapeConfigs += ,([ordered]@{
-                job_name = "rabbitmqexporter"
-                static_configs = @(
-                @{
-                    targets = @(
-                    $env:rabbitmq_scrape_target
-                    )
-                }
-                )
-            })
-        } else {
-            # Add the endpoint to the config
-            $scrapeConfigs += ,([ordered]@{
-                job_name = "rabbitmqexporter"
-                static_configs = @(
-                @{
-                    targets = @(
-                    "rabbitmqexporter:5672"
-                    )
-                }
-                )
-            })
+            @"
+prometheus.scrape "rabbit" {
+  targets = [
+    {"__address__" = "$rabbitmq_scrape_target", "instance" = "one"},
+  ]
+
+  forward_to = [prometheus.remote_write.default.receiver]
+}
+
+"@ | Out-File -FilePath $CONFIG -Append
         }
-        $configContent.metrics.configs[0].scrape_configs = $scrapeConfigs
-        Write-Output "RabbitMQ scrape endpoint added"
+        else
+        {
+            # Add the endpoint to the config
+            @"
+prometheus.scrape "rabbit" {
+  targets = [
+    {"__address__" = "127.0.0.1:15692", "instance" = "one"},
+  ]
+
+  forward_to = [prometheus.remote_write.default.receiver]
+}
+
+"@ | Out-File -FilePath $CONFIG -Append
+            Write-Output "RabbitMQ scrape endpoint added"
+        }
     }
 }
 
@@ -463,115 +479,20 @@ if ((Get-NetTCPConnection).LocalPort -contains 6379 -or $env:redis_connection_st
 
     # Add integration
     if ($env:redis_disabled -eq $true) {
-        $integrationProperties.Add('redis_exporter', [ordered]@{
-            enabled = $false
-            redis_addr = $redisDatasource
-        })
         Write-Output "Redis integration configured"
     } else {
-        $integrationProperties.Add('redis_exporter', [ordered]@{
-            enabled = $true
-            redis_addr = $redisDatasource
-        })
+        @"
+prometheus.exporter.redis "example" {
+  redis_addr = "$redisDatasource"
+}
+
+prometheus.scrape "redis" {
+  targets    = prometheus.exporter.redis.example.targets
+  forward_to = [prometheus.remote_write.default.receiver]
+}
+
+"@ | Out-File -FilePath $CONFIG -Append
         Write-Output "Redis integration enabled"
-    }
-}
-
-# Detect Kafka
-if ((Get-NetTCPConnection).LocalPort -contains 9092 -or $env:kafka_connection_string)
-{
-    Write-Host "Kafka detected"
-
-    # Check if connection string already set in environment
-    if (-not $env:kafka_connection_string)
-    {
-        $kafkaDatasource = "127.0.0.1:9092"
-    } else {
-        $kafkaDatasource = $env:kafka_connection_string
-    }
-
-    # Add integration
-    if ($env:kafka_disabled -eq $true)
-    {
-        $integrationProperties.Add('kafka_exporter', [ordered]@{
-            enabled = $false
-            kafka_uris = @($kafkaDatasource)
-        })
-        Write-Output "Kafka integration configured"
-    }
-    else
-    {
-        $integrationProperties.Add('kafka_exporter', [ordered]@{
-            enabled = $true
-            kafka_uris = @($kafkaDatasource)
-        })
-        Write-Output "Kafka integration enabled"
-    }
-}
-
-# Detect Elasticsearch
-if ((Get-NetTCPConnection).LocalPort -contains 9200 -or $env:elasticsearch_connection_string)
-{
-    Write-Host "Elasticsearch detected"
-    # Check if connection string already set in environment
-    if (-not $env:elasticsearch_connection_string)
-    {
-        # Check if credentials already set in environment
-        if (-not $env:elasticsearch_user -or -not $env:elasticsearch_password)
-        {
-            Write-Host "Elasticsearch credentials not found"
-            while ($true)
-            {
-                Write-Host "Enter your username:"
-                $user = Read-Host
-                if ( [string]::IsNullOrWhiteSpace($user))
-                {
-                    Write-Host "Username cannot be empty. Please enter a valid username."
-                }
-                else
-                {
-                    break
-                }
-            }
-
-            while ($true)
-            {
-                Write-Host "Enter your password:"
-                $pass = Read-Host -AsSecureString
-                $passText = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($pass))
-                if ( [string]::IsNullOrWhiteSpace($passText))
-                {
-                    Write-Host "Password cannot be empty. Please enter a valid password."
-                }
-                else
-                {
-                    break
-                }
-            }
-            $esDatasource = "http://${user}:${passText}@localhost:9200"
-        }
-        else
-        {
-            Write-Output "Elasticsearch credentials found"
-            $esDatasource = "http://${env:elasticsearch_user}:${env:elasticsearch_password}@localhost:9200"
-        }
-    } else {
-        $esDatasource = $env:elasticsearch_connection_string
-    }
-
-    # Add integration
-    if ($env:elasticsearch_disabled -eq $true) {
-        $integrationProperties.Add('elasticsearch_exporter', [ordered]@{
-            enabled = $false
-            address = $esDatasource
-        })
-        Write-Output "Elasticsearch integration configured"
-    } else {
-        $integrationProperties.Add('elasticsearch_exporter', [ordered]@{
-            enabled = $true
-            address = $esDatasource
-        })
-        Write-Output "Elasticsearch integration enabled"
     }
 }
 
@@ -579,27 +500,34 @@ if ($env:scrape_jobs -and $env:scrape_targets) {
     # Split the variables into arrays
     $scrapeJobs = $env:scrape_jobs.Trim('"') -split ", "
     $scrapeTargets = $env:scrape_targets.Trim('"') -split ", "
+    @"
+prometheus.scrape "endpoints" {
+  targets = [
+"@ | Out-File -FilePath $CONFIG -Append
 
     # Add the jobs and targets to the config
-    for ($i=0; $i -lt $scrapeJobs.Length; $i++) {
+    for ($i=0; $i -lt $scrapeTargets.Length; $i++) {
         # Add the endpoint to the config
-        $scrapeConfigs += ,([ordered]@{
-            job_name = $($scrapeJobs[$i])
-            static_configs = @(
-            @{
-                targets = @(
-                $($scrapeTargets[$i])
-                )
-            }
-            )
-        })
+        @"
+    {"__address__" = "${scrapeTargets[i]}"},
+"@ | Out-File -FilePath $CONFIG -Append
     }
-    $configContent.metrics.configs[0].scrape_configs = $scrapeConfigs
+    @"
+  ]
+  forward_to = [prometheus.remote_write.default.receiver]
+}
+
+"@ | Out-File -FilePath $CONFIG -Append
     Write-Host "Scrape endpoints added"
 }
 
 while ($true)
 {
+    @"
+prometheus.scrape "endpoints" {
+  targets = [
+"@ | Out-File -FilePath $CONFIG -Append
+
     $ans = Read-Host "Is there an additional endpoint you would like to scrape? (y/n)" | ForEach-Object { $_.ToLower() }
     if ($ans -eq "y") {
         $endpointName = Read-Host "Enter the name of the service being scraped"
@@ -611,28 +539,31 @@ while ($true)
         else
         {
             # Add the endpoint to the config
-            $scrapeConfigs += ,([ordered]@{
-                job_name = $endpointName
-                static_configs = @(
-                @{
-                    targets = @(
-                    $endpointTarget
-                    )
-                }
-                )
-            })
+            @"
+    {"__address__" = "$endpointTarget"},
+"@ | Out-File -FilePath $CONFIG -Append
         }
-        $configContent.metrics.configs[0].scrape_configs = $scrapeConfigs
     } elseif ($ans -eq "n") {
+        @"
+  ]
+  forward_to = [prometheus.remote_write.default.receiver]
+}
+
+"@ | Out-File -FilePath $CONFIG -Append
         break
     } else {
         Write-Output "Invalid input. Please enter y or n."
     }
+    @"
+  ]
+  forward_to = [prometheus.remote_write.default.receiver]
 }
 
-$configContent | ConvertTo-Yaml | Set-Content -Path $CONFIG
+"@ | Out-File -FilePath $CONFIG -Append
+    break
+}
 Write-Output "Config file updated"
 
-Move-Item -Path $CONFIG -Destination "C:\Program Files\Grafana Agent\agent-config.yaml" -Force
-Write-Host "Config file can be found at C:\Program Files\Grafana Agent\agent-config.yaml"
-Restart-Service -Name "Grafana Agent" -Force
+Move-Item -Path $CONFIG -Destination "C:\Program Files\Grafana Agent Flow\config.river" -Force
+Write-Host "Config file can be found at C:\Program Files\Grafana Agent Flow\config.river"
+Restart-Service -Name "Grafana Agent Flow" -Force

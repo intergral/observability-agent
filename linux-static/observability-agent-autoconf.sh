@@ -326,6 +326,7 @@ integrations:
       - "mdadm"
 EOF
 
+# Enable log collection
 while true; do
     if [ "$PROMPT" != false ] && [ -z "${log_collection}" ]; then
       echo "Is there a service you want to enable log collection for? (y/n)"
@@ -608,6 +609,7 @@ if (ss -ltn | grep -qE :9200) || [ -n "${elasticsearch_connection_string}" ]; th
   fi
 fi
 
+# Add Additional Endpoints
 if [ -n "${scrape_jobs}" ] && [ -n "${scrape_targets}" ]; then
   # Split the variables into arrays
   IFS=", " read -ra scrapeJobs <<< "${scrape_jobs//\"/}"
