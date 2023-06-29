@@ -496,9 +496,8 @@ prometheus.scrape "redis" {
     }
 }
 
-if ($env:scrape_jobs -and $env:scrape_targets) {
+if ($env:scrape_targets) {
     # Split the variables into arrays
-    $scrapeJobs = $env:scrape_jobs.Trim('"') -split ", "
     $scrapeTargets = $env:scrape_targets.Trim('"') -split ", "
     @"
 prometheus.scrape "endpoints" {

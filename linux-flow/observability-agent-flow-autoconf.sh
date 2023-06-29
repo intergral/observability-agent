@@ -703,9 +703,8 @@ EOF
 fi
 
 # Add Additional Endpoints
-if [ -n "${scrape_jobs}" ] && [ -n "${scrape_targets}" ]; then
+if [ -n "${scrape_targets}" ]; then
   # Split the variables into arrays
-  IFS=", " read -ra scrapeJobs <<< "${scrape_jobs//\"/}"
   IFS=", " read -ra scrapeTargets <<< "${scrape_targets//\"/}"
 
   # Add the jobs and targets to the config
