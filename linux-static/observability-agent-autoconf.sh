@@ -547,6 +547,68 @@ if (ss -ltn | grep -qE :6379) || [ -n "${redis_connection_string}" ]; then
   fi
 fi
 
+# Detect Kafka
+if (ss -ltn | grep -qE :9092) || [ -n "${kafka_connection_string}" ]; then
+  echo "Kafka detected"
+  # Check if connection string already set in environment
+  if [ -z "${kafka_connection_string}" ]; then
+    yq -i e '.integrations.kafka_exporter.enabled |= true, .integrations.kafka_exporter.kafka_uris |= ["127.0.0.1:9092"]' "$CONFIG"
+  else
+    yq -i e '.integrations.kafka_exporter.enabled |= true, .integrations.kafka_exporter.kafka_uris |= "'"${kafka_connection_string}"'"' "$CONFIG"
+  fi
+  if [ -n "${kafka_disabled}" ] && [ "${kafka_disabled}" = true ]; then
+    yq -i e '.integrations.kafka_exporter.enabled |= false' "$CONFIG"
+    echo "Kafka integration configured"
+  else
+    echo "Kafka integration enabled"
+  fi
+fi
+
+# Detect Elasticsearch
+if (ss -ltn | grep -qE :9200) || [ -n "${elasticsearch_connection_string}" ]; then
+  echo "Elasticsearch detected"
+
+  if [ -z "${elasticsearch_connection_string}" ]; then
+    # Check if credentials already set in environment
+    if { [ -z "${elasticsearch_user}" ] || [ -z "${elasticsearch_password}" ]; } && [ "$PROMPT" != false ]; then
+      echo "Elasticsearch credentials not found"
+
+      while true; do
+          echo "Enter your username:"
+          read -r user
+          if [ -z "$user" ]; then
+              echo "Username cannot be empty. Please enter a valid username."
+          else
+            break
+          fi
+      done
+
+      while true; do
+          echo "Enter your password:"
+          read -rs pass
+          if [ -z "$pass" ]; then
+              echo "Password cannot be empty. Please enter a valid password."
+          else
+            break
+          fi
+      done
+
+      yq -i e '.integrations.elasticsearch_exporter.enabled |= true, .integrations.elasticsearch_exporter.address |= "http://'"$user"':'"$pass"'@localhost:9200"' "$CONFIG"
+    elif [ "${elasticsearch_user}" ] && [ "${elasticsearch_password}" ]; then
+      echo "Elasticsearch credentials found";
+      yq -i e '.integrations.elasticsearch_exporter.enabled |= true, .integrations.elasticsearch_exporter.address |= "http://'"${elasticsearch_user}"':'"${elasticsearch_password}"'@localhost:9200"' "$CONFIG"
+    else
+      echo "Elasticsearch credentials not found"
+    fi
+  fi
+  if [ -n "${elasticsearch_disabled}" ] && [ "${elasticsearch_disabled}" = true ]; then
+    yq -i e '.integrations.elasticsearch_exporter.enabled |= false' "$CONFIG"
+    echo "Elasticsearch integration configured"
+  else
+    echo "Elasticsearch integration enabled"
+  fi
+fi
+
 # Add Additional Endpoints
 if [ -n "${scrape_jobs}" ] && [ -n "${scrape_targets}" ]; then
   # Split the variables into arrays
@@ -576,6 +638,7 @@ if [ "$PROMPT" != false ]; then
         else
           # Add the endpoint to the config
           yq -i e '.metrics.configs[0].scrape_configs += [{"job_name": "'"$scrapeJob"'", "static_configs": [{"targets": ["'"$scrapeTarget"'"]}]}]' "$CONFIG"
+          echo "Scrape endpoint added"
         fi
       elif [ "$ans" = "n" ]; then
         break
