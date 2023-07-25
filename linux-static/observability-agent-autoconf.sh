@@ -567,7 +567,6 @@ fi
 # Detect Elasticsearch
 if (ss -ltn | grep -qE :9200) || [ -n "${elasticsearch_connection_string}" ]; then
   echo "Elasticsearch detected"
-
   if [ -z "${elasticsearch_connection_string}" ]; then
     # Check if credentials already set in environment
     if { [ -z "${elasticsearch_user}" ] || [ -z "${elasticsearch_password}" ]; } && [ "$PROMPT" != false ]; then
@@ -600,6 +599,8 @@ if (ss -ltn | grep -qE :9200) || [ -n "${elasticsearch_connection_string}" ]; th
     else
       echo "Elasticsearch credentials not found"
     fi
+  else
+    yq -i e '.integrations.elasticsearch_exporter.enabled |= true, .integrations.elasticsearch_exporter.address |= "'"${elasticsearch_connection_string}"'"' "$CONFIG"
   fi
   if [ -n "${elasticsearch_disabled}" ] && [ "${elasticsearch_disabled}" = true ]; then
     yq -i e '.integrations.elasticsearch_exporter.enabled |= false' "$CONFIG"
