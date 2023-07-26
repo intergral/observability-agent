@@ -734,4 +734,4 @@ Write-Output "Config file updated"
 Move-Item -Path $CONFIG -Destination "C:\Program Files\Grafana Agent Flow\config.river" -Force
 Write-Host "Config file can be found at C:\Program Files\Grafana Agent Flow\config.river"
 Restart-Service -Name "Grafana Agent Flow" -Force
-Write-Output "Grafana Agent started"
+Write-Output "Grafana Agent Flow started"
