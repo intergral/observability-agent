@@ -193,7 +193,7 @@ logs:
 # Load config file
 $configContent = Get-Content -Path $CONFIG -Raw | ConvertFrom-Yaml
 
-# This also clears existing integrations but they need to be there for this to work
+# This clears existing integrations but they need to be there initially for this to work
 $integrationProperties = [System.Collections.Specialized.OrderedDictionary]::new()
 $configContent.integrations = $integrationProperties
 
@@ -202,8 +202,10 @@ $integrationProperties.Add('agent', @{
     enabled = $true
 })
 # Enable Windows exporter
-$integrationProperties.Add('windows_exporter', @{
+$integrationProperties.Add('windows_exporter', [ordered]@{
     enabled = $true
+    scrape_interval = "15s"
+    enabled_collectors = "cpu,cs,logical_disk,net,os,service,system,textfile,iis"
 })
 Write-Output "Windows exporter integration enabled"
 
