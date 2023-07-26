@@ -731,7 +731,6 @@ prometheus.scrape "kafka" {
 
 EOF
   fi
-  # Is it possible to add disabled functionality? Maybe add exporter but not set up scrape? Is there any point to that tho?
   if [ -n "${kafka_disabled}" ] && [ "${kafka_disabled}" = true ]; then
     echo "Kafka integration configured"
   else
