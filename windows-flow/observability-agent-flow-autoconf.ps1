@@ -116,7 +116,7 @@ Write-Output "Prometheus remote write component enabled"
 # Enable windows exporter component
 @"
 prometheus.exporter.windows "example" {
-
+    enabled_collectors = "cpu,cs,logical_disk,net,os,service,system,textfile,iis"
 }
 
 prometheus.scrape "windows" {
@@ -496,6 +496,174 @@ prometheus.scrape "redis" {
     }
 }
 
+# Detect Kafka
+if ((Get-NetTCPConnection).LocalPort -contains 9092 -or $env:kafka_connection_string){
+    Write-Host "Kafka detected"
+    # Check if connection string already set in environment
+    if (-not $env:kafka_connection_string)
+    {
+        $kafkaDatasource = "127.0.0.1:6379"
+    } else {
+        $kafkaDatasource = $env:kafka_connection_string
+    }
+
+    # Add integration
+    if ($env:kafka_disabled -eq $true) {
+        Write-Output "Kafka integration configured"
+    } else {
+        @"
+prometheus.exporter.kafka "example" {
+  kafka_uris = ["$kafkaDatasource"]
+}
+
+prometheus.scrape "kafka" {
+  targets    = prometheus.exporter.kafka.example.targets
+  forward_to = [prometheus.remote_write.default.receiver]
+}
+
+"@ | Out-File -FilePath $CONFIG -Append
+        Write-Output "Kafka integration enabled"
+    }
+}
+
+#Detect Elasticsearch
+if ((Get-NetTCPConnection).LocalPort -contains 9200 -or $env:elasticsearch_connection_string){
+    Write-Host "Elasticsearch detected"
+    # Check if connection string already set in environment
+    if (-not $env:elasticsearch_connection_string)
+    {
+        # Check if credentials already set in environment
+        if (-not $env:elasticsearch_user -or -not $env:elasticsearch_password)
+        {
+            Write-Host "Elasticsearch credentials not found"
+            while ($true)
+            {
+                Write-Host "Enter your username:"
+                $user = Read-Host
+                if ( [string]::IsNullOrWhiteSpace($user))
+                {
+                    Write-Host "Username cannot be empty. Please enter a valid username."
+                }
+                else
+                {
+                    break
+                }
+            }
+
+            while ($true)
+            {
+                Write-Host "Enter your password:"
+                $pass = Read-Host -AsSecureString
+                $passText = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($pass))
+                if ( [string]::IsNullOrWhiteSpace($passText))
+                {
+                    Write-Host "Password cannot be empty. Please enter a valid password."
+                }
+                else
+                {
+                    break
+                }
+            }
+
+            $esDatasource = "http://${user}:${passText}@localhost:9200"
+        }
+        else
+        {
+            Write-Output "Elasticsearch credentials found"
+            $esDatasource = "http://${env:elasticsearch_user}:${env:elasticsearch_password}@localhost:9200"
+        }
+    } else {
+        $esDatasource = $env:elasticsearch_connection_string
+    }
+
+    # Add integration
+    if ($env:elasticsearch_disabled -eq $true) {
+        Write-Output "Elasticsearch integration configured"
+    } else {
+        @"
+prometheus.exporter.elasticsearch "example" {
+  data_source_name = "$esDatasource"
+}
+
+prometheus.scrape "elasticsearch" {
+  targets    = prometheus.exporter.elasticsearch.example.targets
+  forward_to = [prometheus.remote_write.default.receiver]
+}
+
+"@ | Out-File -FilePath $CONFIG -Append
+        Write-Output "Elasticsearch integration enabled"
+    }
+}
+
+#Detect Mongo
+if ((Get-NetTCPConnection).LocalPort -contains 27017 -or $env:mongo_connection_string){
+    Write-Host "MongoDB detected"
+    # Check if connection string already set in environment
+    if (-not $env:mongo_connection_string)
+    {
+        # Check if credentials already set in environment
+        if (-not $env:mongo_user -or -not $env:mongo_password)
+        {
+            Write-Host "MongoDB credentials not found"
+            while ($true)
+            {
+                Write-Host "Enter your username:"
+                $user = Read-Host
+                if ( [string]::IsNullOrWhiteSpace($user))
+                {
+                    Write-Host "Username cannot be empty. Please enter a valid username."
+                }
+                else
+                {
+                    break
+                }
+            }
+
+            while ($true)
+            {
+                Write-Host "Enter your password:"
+                $pass = Read-Host -AsSecureString
+                $passText = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($pass))
+                if ( [string]::IsNullOrWhiteSpace($passText))
+                {
+                    Write-Host "Password cannot be empty. Please enter a valid password."
+                }
+                else
+                {
+                    break
+                }
+            }
+
+            $mongoDatasource = "mongodb://${user}:${passText}@127.0.0.1:27017/"
+        }
+        else
+        {
+            Write-Output "MongoDB credentials found"
+            $mongoDatasource = "mongodb://${env:mongo_user}:${env:mongo_password}@127.0.0.1:27017/"
+        }
+    } else {
+        $mongoDatasource = $env:mongo_connection_string
+    }
+
+    # Add integration
+    if ($env:mongo_disabled -eq $true) {
+        Write-Output "MongoDB integration configured"
+    } else {
+        @"
+prometheus.exporter.mongodb "example" {
+  mongodb_uri = "$mongoDatasource"
+}
+
+prometheus.scrape "mongodb" {
+  targets    = prometheus.exporter.mongodb.example.targets
+  forward_to = [prometheus.remote_write.default.receiver]
+}
+
+"@ | Out-File -FilePath $CONFIG -Append
+        Write-Output "MongoDB integration enabled"
+    }
+}
+
 if ($env:scrape_targets) {
     # Split the variables into arrays
     $scrapeTargets = $env:scrape_targets.Trim('"') -split ", "
@@ -566,3 +734,4 @@ Write-Output "Config file updated"
 Move-Item -Path $CONFIG -Destination "C:\Program Files\Grafana Agent Flow\config.river" -Force
 Write-Host "Config file can be found at C:\Program Files\Grafana Agent Flow\config.river"
 Restart-Service -Name "Grafana Agent Flow" -Force
+Write-Output "Grafana Agent Flow started"

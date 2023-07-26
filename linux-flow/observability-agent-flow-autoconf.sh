@@ -673,7 +673,7 @@ if (ss -ltn | grep -qE :6379) || [ -n "${redis_connection_string}" ]; then
   if [ -z "${redis_connection_string}" ]; then
     cat <<EOF >> "$CONFIG"
 prometheus.exporter.redis "example" {
-  redis_addr = "$redis_connection_string"
+  redis_addr = "127.0.0.1:6379"
 }
 
 prometheus.scrape "redis" {
@@ -685,7 +685,7 @@ EOF
   else
     cat <<EOF >> "$CONFIG"
 prometheus.exporter.redis "example" {
-  redis_addr = "127.0.0.1:6379"
+  redis_addr = "$redis_connection_string"
 }
 
 prometheus.scrape "redis" {
@@ -699,6 +699,193 @@ EOF
     echo "Redis integration configured"
   else
     echo "Redis integration enabled"
+  fi
+fi
+
+# Detect Kafka
+if (ss -ltn | grep -qE :9092) || [ -n "${kafka_connection_string}" ]; then
+  echo "Kafka detected"
+  # Check if connection string already set in environment
+  if [ -z "${kafka_connection_string}" ]; then
+    cat <<EOF >> "$CONFIG"
+prometheus.exporter.kafka "example" {
+  kafka_uris = ["127.0.0.1:9092"]
+}
+
+prometheus.scrape "kafka" {
+  targets    = prometheus.exporter.kafka.example.targets
+  forward_to = [prometheus.remote_write.default.receiver]
+}
+
+EOF
+  else
+        cat <<EOF >> "$CONFIG"
+prometheus.exporter.kafka "example" {
+  kafka_uris = ["${kafka_connection_string}"]
+}
+
+prometheus.scrape "kafka" {
+  targets    = prometheus.exporter.kafka.example.targets
+  forward_to = [prometheus.remote_write.default.receiver]
+}
+
+EOF
+  fi
+  # Is it possible to add disabled functionality? Maybe add exporter but not set up scrape? Is there any point to that tho?
+  if [ -n "${kafka_disabled}" ] && [ "${kafka_disabled}" = true ]; then
+    echo "Kafka integration configured"
+  else
+    echo "Kafka integration enabled"
+  fi
+fi
+
+# Detect Elasticsearch
+if (ss -ltn | grep -qE :9200) || [ -n "${elasticsearch_connection_string}" ]; then
+  echo "Elasticsearch detected"
+  if [ -z "${elasticsearch_connection_string}" ]; then
+    # Check if credentials already set in environment
+    if { [ -z "${elasticsearch_user}" ] || [ -z "${elasticsearch_password}" ]; } && [ "$PROMPT" != false ]; then
+      echo "Elasticsearch credentials not found"
+
+      while true; do
+          echo "Enter your username:"
+          read -r user
+          if [ -z "$user" ]; then
+              echo "Username cannot be empty. Please enter a valid username."
+          else
+            break
+          fi
+      done
+
+      while true; do
+          echo "Enter your password:"
+          read -rs pass
+          if [ -z "$pass" ]; then
+              echo "Password cannot be empty. Please enter a valid password."
+          else
+            break
+          fi
+      done
+
+      cat <<EOF >> "$CONFIG"
+prometheus.exporter.elasticsearch "example" {
+  address = "http://$user:$pass@localhost:9200"
+}
+
+prometheus.scrape "elasticsearch" {
+  targets    = prometheus.exporter.mysql.example.targets
+  forward_to = [prometheus.remote_write.default.receiver]
+}
+
+EOF
+    elif [ "${elasticsearch_user}" ] && [ "${elasticsearch_password}" ]; then
+      echo "Elasticsearch credentials found";
+      cat <<EOF >> "$CONFIG"
+prometheus.exporter.elasticsearch "example" {
+  address = "http://$elasticsearch_user:$elasticsearch_password@localhost:9200"
+}
+
+prometheus.scrape "elasticsearch" {
+  targets    = prometheus.exporter.mysql.example.targets
+  forward_to = [prometheus.remote_write.default.receiver]
+}
+
+EOF
+    else
+      echo "Elasticsearch credentials not found"
+    fi
+  else
+    cat <<EOF >> "$CONFIG"
+prometheus.exporter.elasticsearch "example" {
+  address = "$elasticsearch_connection_string"
+}
+
+prometheus.scrape "elasticsearch" {
+  targets    = prometheus.exporter.elasticsearch.example.targets
+  forward_to = [prometheus.remote_write.default.receiver]
+}
+
+EOF
+  fi
+  if [ -n "${elasticsearch_disabled}" ] && [ "${elasticsearch_disabled}" = true ]; then
+    echo "Elasticsearch integration configured"
+  else
+    echo "Elasticsearch integration enabled"
+  fi
+fi
+
+# Detect Mongo
+if (ss -ltn | grep -qE :27017) || [ -n "${mongo_connection_string}" ]; then
+  echo "MongoDB detected"
+  if [ -z "${mongo_connection_string}" ]; then
+    # Check if credentials already set in environment
+    if { [ -z "${mongo_user}" ] || [ -z "${mongo_password}" ]; } && [ "$PROMPT" != false ]; then
+      echo "MongoDB credentials not found"
+
+      while true; do
+          echo "Enter your username:"
+          read -r user
+          if [ -z "$user" ]; then
+              echo "Username cannot be empty. Please enter a valid username."
+          else
+            break
+          fi
+      done
+
+      while true; do
+          echo "Enter your password:"
+          read -rs pass
+          if [ -z "$pass" ]; then
+              echo "Password cannot be empty. Please enter a valid password."
+          else
+            break
+          fi
+      done
+
+      cat <<EOF >> "$CONFIG"
+prometheus.exporter.mongodb "example" {
+  mongodb_uri = "mongodb://$user:$pass@127.0.0.1:27017/"
+}
+
+prometheus.scrape "mongodb" {
+  targets    = prometheus.exporter.mongodb.example.targets
+  forward_to = [prometheus.remote_write.default.receiver]
+}
+
+EOF
+    elif [ "${mongodb_user}" ] && [ "${mongodb_password}" ]; then
+      echo "MongoDB credentials found";
+      cat <<EOF >> "$CONFIG"
+prometheus.exporter.mongodb "example" {
+  mongodb_uri = "mongodb://$mongodb_user:$mongodb_password@127.0.0.1:27017/"
+}
+
+prometheus.scrape "mongodb" {
+  targets    = prometheus.exporter.mongodb.example.targets
+  forward_to = [prometheus.remote_write.default.receiver]
+}
+
+EOF
+    else
+      echo "MongoDB credentials not found"
+    fi
+  else
+    cat <<EOF >> "$CONFIG"
+prometheus.exporter.mongodb "example" {
+  mongodb_uri = "$mongo_connection_string"
+}
+
+prometheus.scrape "mongodb" {
+  targets    = prometheus.exporter.mongodb.example.targets
+  forward_to = [prometheus.remote_write.default.receiver]
+}
+
+EOF
+  fi
+  if [ -n "${mongo_disabled}" ] && [ "${mongo_disabled}" = true ]; then
+    echo "Mongo integration configured"
+  else
+    echo "MongoDB integration enabled"
   fi
 fi
 
