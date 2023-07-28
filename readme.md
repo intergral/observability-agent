@@ -103,21 +103,23 @@ To add integrations without being prompted for credentials, there are several en
 
 ### Metric Exporters
 
-| Variable                 | Type     | Description                                                                      |
-|--------------------------|----------|----------------------------------------------------------------------------------|
-| `mysql_user`             | `string` | User for the local Mysql database                                                |
-| `mysql_password`         | `string` | Password for the local Mysql database                                            |
-| `mysql_disabled`         | `bool`   | Enables/Disables the Mysql exporter (enabled by default)                         |
-| `mssql_user`             | `string` | User for the local Mssql database                                                |
-| `mssql_password`         | `string` | Password for the local Mssql database                                            |
-| `mssql_disabled`         | `bool`   | Enables/Disables the Mssql exporter (enabled by default)                         |
-| `postgres_user`          | `string` | User for the local Postgres database                                             |
-| `postgres_password`      | `string` | Password for the local Postgres database                                         |
-| `postgres_disabled`      | `bool`   | Enables/Disables the Postgres exporter (enabled by default)                      |
-| `rabbitmq_disabled`      | `bool`   | Enables/Disables the RabbitMQ exporter (enabled by default)                      |
-| `redis_disabled`         | `bool`   | Enables/Disables the Redis exporter (enabled by default)                         |
-| `elasticsearch_user`     | `string` | User for the Elastic search instance (observability-agent-flow incompatible)     |
-| `elasticsearch_password` | `string` | Password for the Elastic search instance (observability-agent-flow incompatible) |
+| Variable                 | Type     | Description                                                    |
+|--------------------------|----------|----------------------------------------------------------------|
+| `mysql_user`             | `string` | User for the local Mysql database                              |
+| `mysql_password`         | `string` | Password for the local Mysql database                          |
+| `mysql_disabled`         | `bool`   | Enables/Disables the Mysql exporter (enabled by default)       |
+| `mssql_user`             | `string` | User for the local Mssql database                              |
+| `mssql_password`         | `string` | Password for the local Mssql database                          |
+| `mssql_disabled`         | `bool`   | Enables/Disables the Mssql exporter (enabled by default)       |
+| `postgres_user`          | `string` | User for the local Postgres database                           |
+| `postgres_password`      | `string` | Password for the local Postgres database                       |
+| `postgres_disabled`      | `bool`   | Enables/Disables the Postgres exporter (enabled by default)    |
+| `rabbitmq_disabled`      | `bool`   | Enables/Disables the RabbitMQ exporter (enabled by default)    |
+| `redis_disabled`         | `bool`   | Enables/Disables the Redis exporter (enabled by default)       |
+| `elasticsearch_user`     | `string` | User for the Elastic search instance                           |
+| `elasticsearch_password` | `string` | Password for the Elastic search instance                       |
+| `mongodb_user`           | `string` | Password for the Elastic search instance (static incompatible) |
+| `mongodb_password`       | `string` | Password for the Elastic search instance (static incompatible) |
 
 ### Exporting metrics from external machines
 
@@ -132,10 +134,10 @@ To replace these with a custom connection string, there are several environment 
 | `redis_connection_string`         | `string` | `<host>:6379`                                          |
 | `kafka_connection_string`         | `string` | `["<host>:9092"]`                                      |
 | `elasticsearch_connection_string` | `string` | `http://<username>:<password>@<host>:9200`             |
+| `mongo_connection_string`         | `string` | `mongodb://<username>:<password>@<host>:27017/`        |
 
 RabbitMQ requires an internal exporter to be enabled. Visit [the documentation](https://www.rabbitmq.com/prometheus.html) for more information. <br>
-`kafka_connection_string` and `elasticsearch_connection_string` are currently incompatible with observability-agent-flow.
-
+`mongo_connection_string` is incompatible with static.
 
 ### Log Exporters
 
