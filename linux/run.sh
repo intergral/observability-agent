@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Run the autoconfiguration script in the background
-/bin/bash /observability-agent-flow-autoconf.sh --install false --config.file /etc/agent/config.river --prompt false &
+/bin/bash /observability-agent-autoconf.sh --install false --config.file /etc/agent/config.river --prompt false &
 
 # Save the PID (Process IDentifier) of the first process
 PID=$!

@@ -10,66 +10,43 @@ Windows machines must have Powershell 5.1 or later installed. macOS is not curre
 The script will automatically detect what's running on your machine and add integrations to the config file. For this, each service you want to have an integration
 for must be running on its default port, these are:
 
-| Integration  | Default Port |
-|--------------|--------------|
-| `MySQL`      | `3306`       |
-| `MSSQL`      | `1433`       |
-| `Postgres`   | `5432`       |
+| Integration         | Default Port |
+|---------------------|--------------|
+| `MySQL`             | `3306`       |
+| `MSSQL`             | `1433`       |
+| `Postgres`          | `5432`       |
+| `RabbitMQ`          | `5672`       |
+| `RabbitMQ Exporter` | `15692`      |
+| `Redis`             | `6379`       |
+| `Kafka`             | `9092`       |
+| `Elasticsearch`     | `9200`       |
+| `Mongo`             | `27017`      |
 
-## Static Mode Procedure
-[Latest Release](https://github.com/intergral/observability-agent/releases) </br>
+## Procedure
 
-Static mode refers to the default, original variant of the Grafana Agent, which utilises yaml config files. </br>
-For the Observability Agent, this refers to the `observability-agent-autoconf.sh` and `observability-agent-autoconf.ps1` scripts respectively.
+> **The [Static Mode](https://grafana.com/docs/agent/latest/static/) installer has been deprecated in favour of a [Flow Mode](https://grafana.com/docs/agent/latest/flow/) installer** </br>
 
-To learn more about Static mode, visit [Grafana's Documentation](https://grafana.com/docs/agent/latest/static/).
+> **[Latest Release](https://github.com/intergral/observability-agent/releases)** </br>
 
-### Linux-Static
+### Linux
 To download and run the installer, in a terminal, run: </br>
 ```
-curl -O -L "https://github.com/intergral/observability-agent/releases/download/v0.2.0/observability-agent-autoconf.sh"
+curl -O -L "https://github.com/intergral/observability-agent/releases/download/v0.2.3/observability-agent-autoconf.sh"
 chmod a+x "observability-agent-autoconf.sh"
 sudo /bin/bash observability-agent-autoconf.sh
 ```
 
-### Windows-Static
+### Windows
 To download and run the installer, open powershell admin terminal, navigate to your desired download folder and run: </br>
 ```
-Invoke-WebRequest -Uri "https://github.com/intergral/observability-agent/releases/download/v0.2.0/observability-agent-autoconf.ps1" -OutFile "observability-agent-autoconf.ps1"
+Invoke-WebRequest -Uri "https://github.com/intergral/observability-agent/releases/download/v0.2.3/observability-agent-autoconf.ps1" -OutFile "observability-agent-autoconf.ps1"
 .\observability-agent-autoconf.ps1
 ```
 
 The installer for windows assumes you are installing the Grafana Agent in the default location on the C drive </br>
 This is required for the config file to be placed in the correct location for the Grafana Agent to read it
 
-## Flow Mode Procedure
-[Latest Release](https://github.com/intergral/observability-agent/releases) </br>
-
-Flow mode refers to a newer, re-imagined variant of the Grafana Agent, which utilises river config files. </br>
-For the Observability Agent, this refers to the `observability-agent-flow-autoconf.sh` and `observability-agent-flow-autoconf.ps1` scripts respectively.
-
-To learn more about Flow mode, visit [Grafana's Documentation](https://grafana.com/docs/agent/latest/flow/).
-
-### Linux-Flow
-To download and run the installer, in a terminal, run: </br>
-```
-curl -O -L "https://github.com/intergral/observability-agent/releases/download/v0.2.0/observability-agent-flow-autoconf.sh"
-chmod a+x "observability-agent-flow-autoconf.sh"
-sudo /bin/bash observability-agent-flow-autoconf.sh
-```
-
-### Windows-Flow
-To download and run the installer, open powershell admin terminal, navigate to your desired download folder and run: </br>
-```
-Invoke-WebRequest -Uri "https://github.com/intergral/observability-agent/releases/download/v0.2.0/observability-agent-flow-autoconf.ps1" -OutFile "observability-agent-autoconf.ps1"
-.\observability-agent-flow-autoconf.ps1
-```
-
-The installer for windows assumes you are installing the Grafana Agent Flow in the default location on the C drive </br>
-This is required for the config file to be placed in the correct location for the Grafana Agent Flow to read it
-
 ## Options
-> **All options apply to both [Static mode](#static-mode-procedure) and [Flow mode](#flow-mode-procedure) by replacing the relevant files in the examples.** </br>
 
 Agent installation is enabled by default. To run without installing the agent, add `--install false` to the end of the run command. For example: </br>
 `sudo path/to/observability-agent-autoconf.sh --install false`
@@ -94,32 +71,32 @@ To add integrations without being prompted for credentials, there are several en
 
 ### Ingest
 
-| Variable           | Type     | Description                                                                                    |
-|--------------------|----------|------------------------------------------------------------------------------------------------|
-| `api_key`          | `string` | API Key to authenticate with your FusionReactor Cloud Account                                  |
-| `metrics_Endpoint` | `string` | Default: `https://api.fusionreactor.io/v1/metrics`                                             |
-| `logs_Endpoint`    | `string` | Default: `https://api.fusionreactor.io/v1/logs`                                                |
-| `logs_user`        | `string` | Username to authenticate with your FusionReactor Cloud Account (observability-agent-flow only) |
+| Variable           | Type     | Description                                                    |
+|--------------------|----------|----------------------------------------------------------------|
+| `api_key`          | `string` | API Key to authenticate with your FusionReactor Cloud Account  |
+| `metrics_Endpoint` | `string` | Default: `https://api.fusionreactor.io/v1/metrics`             |
+| `logs_Endpoint`    | `string` | Default: `https://api.fusionreactor.io/v1/logs`                |
+| `logs_user`        | `string` | Username to authenticate with your FusionReactor Cloud Account |
 
 ### Metric Exporters
 
-| Variable                 | Type     | Description                                                    |
-|--------------------------|----------|----------------------------------------------------------------|
-| `mysql_user`             | `string` | User for the local Mysql database                              |
-| `mysql_password`         | `string` | Password for the local Mysql database                          |
-| `mysql_disabled`         | `bool`   | Enables/Disables the Mysql exporter (enabled by default)       |
-| `mssql_user`             | `string` | User for the local Mssql database                              |
-| `mssql_password`         | `string` | Password for the local Mssql database                          |
-| `mssql_disabled`         | `bool`   | Enables/Disables the Mssql exporter (enabled by default)       |
-| `postgres_user`          | `string` | User for the local Postgres database                           |
-| `postgres_password`      | `string` | Password for the local Postgres database                       |
-| `postgres_disabled`      | `bool`   | Enables/Disables the Postgres exporter (enabled by default)    |
-| `rabbitmq_disabled`      | `bool`   | Enables/Disables the RabbitMQ exporter (enabled by default)    |
-| `redis_disabled`         | `bool`   | Enables/Disables the Redis exporter (enabled by default)       |
-| `elasticsearch_user`     | `string` | User for the Elastic search instance                           |
-| `elasticsearch_password` | `string` | Password for the Elastic search instance                       |
-| `mongodb_user`           | `string` | Password for the Elastic search instance (static incompatible) |
-| `mongodb_password`       | `string` | Password for the Elastic search instance (static incompatible) |
+| Variable                 | Type     | Description                                                 |
+|--------------------------|----------|-------------------------------------------------------------|
+| `mysql_user`             | `string` | User for the local Mysql database                           |
+| `mysql_password`         | `string` | Password for the local Mysql database                       |
+| `mysql_disabled`         | `bool`   | Enables/Disables the Mysql exporter (enabled by default)    |
+| `mssql_user`             | `string` | User for the local Mssql database                           |
+| `mssql_password`         | `string` | Password for the local Mssql database                       |
+| `mssql_disabled`         | `bool`   | Enables/Disables the Mssql exporter (enabled by default)    |
+| `postgres_user`          | `string` | User for the local Postgres database                        |
+| `postgres_password`      | `string` | Password for the local Postgres database                    |
+| `postgres_disabled`      | `bool`   | Enables/Disables the Postgres exporter (enabled by default) |
+| `rabbitmq_disabled`      | `bool`   | Enables/Disables the RabbitMQ exporter (enabled by default) |
+| `redis_disabled`         | `bool`   | Enables/Disables the Redis exporter (enabled by default)    |
+| `elasticsearch_user`     | `string` | User for the Elastic search instance                        |
+| `elasticsearch_password` | `string` | Password for the Elastic search instance                    |
+| `mongodb_user`           | `string` | Password for the Elastic search instance                    |
+| `mongodb_password`       | `string` | Password for the Elastic search instance                    |
 
 ### Exporting metrics from external machines
 
@@ -137,7 +114,6 @@ To replace these with a custom connection string, there are several environment 
 | `mongo_connection_string`         | `string` | `mongodb://<username>:<password>@<host>:27017/`        |
 
 RabbitMQ requires an internal exporter to be enabled. Visit [the documentation](https://www.rabbitmq.com/prometheus.html) for more information. <br>
-`mongo_connection_string` is incompatible with static.
 
 ### Log Exporters
 
@@ -156,7 +132,6 @@ The list must be wrapped in double quotes and each value must be separated by a 
 
 | Variable         | Type     | Example                                  | Description                                                             |
 |------------------|----------|------------------------------------------|-------------------------------------------------------------------------|
-| `scrape_jobs`    | `string` | `"nginxexporter, iisexporter"`           | List of exporters to be scraped (observability-agent-flow incompatible) |
 | `scrape_targets` | `string` | `"nginxexporter:9113, iisexporter:1234"` | List of endpoints for the exporters                                     |
 
 ### .Env Files
