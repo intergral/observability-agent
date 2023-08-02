@@ -19,9 +19,6 @@
          with:
            username: ${{ secrets.DOCKER_USERNAME }}
            password: ${{ secrets.DOCKER_PASSWORD }}
-       - name: Build Static Images
-         working-directory: ./linux-static
+       - name: Build Images
+         working-directory: ./linux
          run: docker buildx build --platform linux/amd64,linux/arm64 -t intergral/observability-agent:latest --push .
-       - name: Build Flow Images
-         working-directory: ./linux-flow
-         run: docker buildx build --platform linux/amd64,linux/arm64 -t intergral/observability-agent:flow --push .
