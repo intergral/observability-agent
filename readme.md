@@ -95,8 +95,10 @@ To add integrations without being prompted for credentials, there are several en
 | `redis_disabled`         | `bool`   | Enables/Disables the Redis exporter (enabled by default)    |
 | `elasticsearch_user`     | `string` | User for the Elastic search instance                        |
 | `elasticsearch_password` | `string` | Password for the Elastic search instance                    |
-| `mongodb_user`           | `string` | Password for the Elastic search instance                    |
-| `mongodb_password`       | `string` | Password for the Elastic search instance                    |
+| `mongodb_user`           | `string` | User for the local Mongo database                           |
+| `mongodb_password`       | `string` | Password for the local Mongo database                       |
+| `oracledb_user`          | `string` | User for the local Oracle database                          |
+| `oracledb_password`      | `string` | Password for the local Oracle database                      |
 
 ### Exporting metrics from external machines
 
@@ -111,7 +113,8 @@ To replace these with a custom connection string, there are several environment 
 | `redis_connection_string`         | `string` | `<host>:6379`                                          |
 | `kafka_connection_string`         | `string` | `["<host>:9092"]`                                      |
 | `elasticsearch_connection_string` | `string` | `http://<username>:<password>@<host>:9200`             |
-| `mongo_connection_string`         | `string` | `mongodb://<username>:<password>@<host>:27017/`        |
+| `mongodb_connection_string`       | `string` | `mongodb://<username>:<password>@<host>:27017/`        |
+| `oracledb_connection_string`      | `string` | `oracle://<username>:<password>@<host>:1521/ORCLCDB`   |
 
 RabbitMQ requires an internal exporter to be enabled. Visit [the documentation](https://www.rabbitmq.com/prometheus.html) for more information. <br>
 

@@ -814,9 +814,9 @@ EOF
 fi
 
 # Detect Mongo
-if (ss -ltn | grep -qE :27017) || [ -n "${mongo_connection_string}" ]; then
+if (ss -ltn | grep -qE :27017) || [ -n "${mongodb_connection_string}" ]; then
   echo "MongoDB detected"
-  if [ -z "${mongo_connection_string}" ]; then
+  if [ -z "${mongodb_connection_string}" ]; then
     # Check if credentials already set in environment
     if { [ -z "${mongo_user}" ] || [ -z "${mongo_password}" ]; } && [ "$PROMPT" != false ]; then
       echo "MongoDB credentials not found"
@@ -871,7 +871,7 @@ EOF
   else
     cat <<EOF >> "$CONFIG"
 prometheus.exporter.mongodb "example" {
-  mongodb_uri = "$mongo_connection_string"
+  mongodb_uri = "$mongodb_connection_string"
 }
 
 prometheus.scrape "mongodb" {
@@ -885,6 +885,81 @@ EOF
     echo "Mongo integration configured"
   else
     echo "MongoDB integration enabled"
+  fi
+fi
+
+# Detect OracleDB
+if (ss -ltn | grep -qE :1521) || [ -n "${oracledb_connection_string}" ]; then
+  echo "OracleDB detected"
+  if [ -z "${oracledb_connection_string}" ]; then
+    # Check if credentials already set in environment
+    if { [ -z "${oracledb_user}" ] || [ -z "${oracledb_password}" ]; } && [ "$PROMPT" != false ]; then
+      echo "OracleDB credentials not found"
+
+      while true; do
+          echo "Enter your username:"
+          read -r user
+          if [ -z "$user" ]; then
+              echo "Username cannot be empty. Please enter a valid username."
+          else
+            break
+          fi
+      done
+
+      while true; do
+          echo "Enter your password:"
+          read -rs pass
+          if [ -z "$pass" ]; then
+              echo "Password cannot be empty. Please enter a valid password."
+          else
+            break
+          fi
+      done
+
+      cat <<EOF >> "$CONFIG"
+prometheus.exporter.oracledb "example" {
+  connection_string = "oracle://$user:$pass@127.0.0.1:1521/ORCLCDB"
+}
+
+prometheus.scrape "oracledb" {
+  targets    = prometheus.exporter.oracledb.example.targets
+  forward_to = [prometheus.remote_write.default.receiver]
+}
+
+EOF
+    elif [ "${oracledb_user}" ] && [ "${oracledb_password}" ]; then
+      echo "OracleDB credentials found";
+      cat <<EOF >> "$CONFIG"
+prometheus.exporter.oracledb "example" {
+  connection_string = "oracle://$oracledb_user:$oracledb_password@127.0.0.1:1521/ORCLCDB"
+}
+
+prometheus.scrape "oracledb" {
+  targets    = prometheus.exporter.oracledb.example.targets
+  forward_to = [prometheus.remote_write.default.receiver]
+}
+
+EOF
+    else
+      echo "OracleDB credentials not found"
+    fi
+  else
+    cat <<EOF >> "$CONFIG"
+prometheus.exporter.oracledb "example" {
+  connection_string = "$oracledb_connection_string"
+}
+
+prometheus.scrape "oracledb" {
+  targets    = prometheus.exporter.oracledb.example.targets
+  forward_to = [prometheus.remote_write.default.receiver]
+}
+
+EOF
+  fi
+  if [ -n "${oracle_disabled}" ] && [ "${oracle_disabled}" = true ]; then
+    echo "OracleDB integration configured"
+  else
+    echo "OracleDB integration enabled"
   fi
 fi
 
