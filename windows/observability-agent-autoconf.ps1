@@ -596,10 +596,10 @@ prometheus.scrape "elasticsearch" {
 }
 
 #Detect Mongo
-if ((Get-NetTCPConnection).LocalPort -contains 27017 -or $env:mongo_connection_string){
+if ((Get-NetTCPConnection).LocalPort -contains 27017 -or $env:mongodb_connection_string){
     Write-Host "MongoDB detected"
     # Check if connection string already set in environment
-    if (-not $env:mongo_connection_string)
+    if (-not $env:mongodb_connection_string)
     {
         # Check if credentials already set in environment
         if (-not $env:mongo_user -or -not $env:mongo_password)
@@ -642,7 +642,7 @@ if ((Get-NetTCPConnection).LocalPort -contains 27017 -or $env:mongo_connection_s
             $mongoDatasource = "mongodb://${env:mongo_user}:${env:mongo_password}@127.0.0.1:27017/"
         }
     } else {
-        $mongoDatasource = $env:mongo_connection_string
+        $mongoDatasource = $env:mongodb_connection_string
     }
 
     # Add integration

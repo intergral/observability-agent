@@ -814,9 +814,9 @@ EOF
 fi
 
 # Detect Mongo
-if (ss -ltn | grep -qE :27017) || [ -n "${mongo_connection_string}" ]; then
+if (ss -ltn | grep -qE :27017) || [ -n "${mongodb_connection_string}" ]; then
   echo "MongoDB detected"
-  if [ -z "${mongo_connection_string}" ]; then
+  if [ -z "${mongodb_connection_string}" ]; then
     # Check if credentials already set in environment
     if { [ -z "${mongo_user}" ] || [ -z "${mongo_password}" ]; } && [ "$PROMPT" != false ]; then
       echo "MongoDB credentials not found"
@@ -871,7 +871,7 @@ EOF
   else
     cat <<EOF >> "$CONFIG"
 prometheus.exporter.mongodb "example" {
-  mongodb_uri = "$mongo_connection_string"
+  mongodb_uri = "$mongodb_connection_string"
 }
 
 prometheus.scrape "mongodb" {
