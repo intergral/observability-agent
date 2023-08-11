@@ -664,6 +664,74 @@ prometheus.scrape "mongodb" {
     }
 }
 
+#Detect OracleDB
+if ((Get-NetTCPConnection).LocalPort -contains 1521 -or $env:oracledb_connection_string){
+    Write-Host "OracleDB detected"
+    # Check if connection string already set in environment
+    if (-not $env:oracledb_connection_string)
+    {
+        # Check if credentials already set in environment
+        if (-not $env:oracledb_user -or -not $env:oracledb_password)
+        {
+            Write-Host "OracleDB credentials not found"
+            while ($true)
+            {
+                Write-Host "Enter your username:"
+                $user = Read-Host
+                if ( [string]::IsNullOrWhiteSpace($user))
+                {
+                    Write-Host "Username cannot be empty. Please enter a valid username."
+                }
+                else
+                {
+                    break
+                }
+            }
+
+            while ($true)
+            {
+                Write-Host "Enter your password:"
+                $pass = Read-Host -AsSecureString
+                $passText = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($pass))
+                if ( [string]::IsNullOrWhiteSpace($passText))
+                {
+                    Write-Host "Password cannot be empty. Please enter a valid password."
+                }
+                else
+                {
+                    break
+                }
+            }
+            $oracleDatasource = "oracle://${user}:${passText}@127.0.0.1:1521/ORCLCDB"
+        }
+        else
+        {
+            Write-Output "OracleDB credentials found"
+            $oracleDatasource = "oracle://${env:oracledb_user}:${env:oracledb_password}@127.0.0.1:1521/ORCLCDB"
+        }
+    } else {
+        $oracleDatasource = $env:oracledb_connection_string
+    }
+
+    # Add integration
+    if ($env:oracledb_disabled -eq $true) {
+        Write-Output "OracleDB integration configured"
+    } else {
+        @"
+prometheus.exporter.oracledb "example" {
+  connection_string = "$oracleDatasource"
+}
+
+prometheus.scrape "oracledb" {
+  targets    = prometheus.exporter.oracledb.example.targets
+  forward_to = [prometheus.remote_write.default.receiver]
+}
+
+"@ | Out-File -FilePath $CONFIG -Append
+        Write-Output "OracleDB integration enabled"
+    }
+}
+
 if ($env:scrape_targets) {
     # Split the variables into arrays
     $scrapeTargets = $env:scrape_targets.Trim('"') -split ", "
