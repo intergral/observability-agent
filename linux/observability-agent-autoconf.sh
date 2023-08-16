@@ -398,8 +398,61 @@ EOF
   fi
 done
 
+# Enable open telemetry metrics and traces
+while true; do
+    if [ "$PROMPT" != false ] && [ -z "${otel_collection}" ]; then
+      echo "Would you like to enable collection of open telemetry metrics and traces? (y/n)"
+      read -r ans
+      ans=${ans,,}
+    elif [ "${otel_collection}" = true ]; then
+      ans="y"
+    else
+      ans="n"
+    fi
+
+  if [ "$ans" = "y" ]; then
+    # Add open telemetry traces
+    cat <<EOF >> "$CONFIG"
+otelcol.receiver.otlp "default" {
+    http {
+        endpoint = "0.0.0.0:4318"
+    }
+    output {
+           metrics = [otelcol.exporter.prometheus.default.input]
+           traces = [otelcol.processor.batch.default.input]
+    }
+}
+
+otelcol.processor.batch "default" {
+  send_batch_size = 100000
+  output {
+    traces  = [otelcol.exporter.otlphttp.traceEndpoint.input]
+  }
+}
+
+otelcol.exporter.prometheus "default" {
+    forward_to = [prometheus.remote_write.default.receiver]
+}
+
+otelcol.exporter.otlphttp "traceEndpoint" {
+    client {
+        endpoint = "https://api.fusionreactor.io"
+        headers = {authorization = "$key"}
+        compression = "none"
+    }
+}
+
+EOF
+    break
+  elif [ "$ans" = "n" ]; then
+    break
+  else
+    echo "Invalid input. Please enter y or n."
+  fi
+done
+
 # Detect MySQL
-if (ss -ltn | grep -qE :3306) || [ -n "${mysql_connection_string}" ]; then
+if { (ss -ltn | grep -qE :3306) || [ -n "${mysql_connection_string}" ]; } && [ "${mysql_disabled}" != true ]; then
   echo "MySQL detected"
   # Check if connection string already set in environment
   if [ -z "${mysql_connection_string}" ]; then
@@ -466,15 +519,11 @@ prometheus.scrape "mysql" {
 
 EOF
   fi
-  if [ -n "${mysql_disabled}" ] && [ "${mysql_disabled}" = true ]; then
-    echo "MySQL integration configured"
-  else
-    echo "MySQL integration enabled"
-  fi
+  echo "MySQL integration enabled"
 fi
 
 # Detect MSSQL
-if (ss -ltn | grep -qE :1433) || [ -n "${mssql_connection_string}" ]; then
+if { (ss -ltn | grep -qE :1433) || [ -n "${mssql_connection_string}" ]; } && [ "${mssql_disabled}" != true ]; then
   echo "MSSQL detected"
   # Check if connection string already set in environment
   if [ -z "${mssql_connection_string}" ]; then
@@ -541,15 +590,11 @@ prometheus.scrape "mssql" {
 
 EOF
   fi
-  if [ -n "${mssql_disabled}" ] && [ "${mssql_disabled}" = true ]; then
-    echo "MSSQL integration configured"
-  else
-    echo "MSSQL integration enabled"
-  fi
+  echo "MSSQL integration enabled"
 fi
 
 # Detect Postgres
-if (ss -ltn | grep -qE :5432) || [ -n "${postgres_connection_string}" ]; then
+if { (ss -ltn | grep -qE :5432) || [ -n "${postgres_connection_string}" ]; } && [ "${postgres_disabled}" != true ]; then
   echo "Postgres detected"
   # Check if connection string already set in environment
   if [ -z "${postgres_connection_string}" ]; then
@@ -625,49 +670,43 @@ prometheus.scrape "postgres" {
 
 EOF
   fi
-  if [ -n "${postgres_disabled}" ] && [ "${postgres_disabled}" = true ]; then
-    echo "Postgres integration configured"
-  else
-    echo "Postgres integration enabled"
-  fi
+  echo "Postgres integration enabled"
 fi
 
 # Detect RabbitMQ
-if (ss -ltn | grep -qE :5672) || [ -n "${rabbitmq_scrape_target}" ]; then
+if { (ss -ltn | grep -qE :5672) || [ -n "${rabbitmq_scrape_target}" ]; } && [ "${rabbitmq_disabled}" != true ]; then
   echo "RabbitMQ detected"
-  if [ "${rabbitmq_disabled}" != true ]; then
-    if ! (ss -ltn | grep -qE :15692); then
-      echo "RabbitMQ exporter is not enabled, see the Observability Agent docs to learn how to enable it"
-    fi
-    if [ -n "${rabbitmq_scrape_target}" ]; then
-      cat <<EOF >> "$CONFIG"
-prometheus.scrape "rabbit" {
-  targets = [
-    {"__address__" = "$rabbitmq_scrape_target", "instance" = "one"},
-  ]
-
-  forward_to = [prometheus.remote_write.default.receiver]
-}
-
-EOF
-    else
-      cat <<EOF >> "$CONFIG"
-prometheus.scrape "rabbit" {
-  targets = [
-    {"__address__" = "127.0.0.1:15692", "instance" = "one"},
-  ]
-
-  forward_to = [prometheus.remote_write.default.receiver]
-}
-
-EOF
-    fi
-    echo "RabbitMQ scrape endpoint added"
+  if ! (ss -ltn | grep -qE :15692); then
+    echo "RabbitMQ exporter is not enabled, see the Observability Agent docs to learn how to enable it"
   fi
+  if [ -n "${rabbitmq_scrape_target}" ]; then
+    cat <<EOF >> "$CONFIG"
+prometheus.scrape "rabbit" {
+targets = [
+  {"__address__" = "$rabbitmq_scrape_target", "instance" = "one"},
+]
+
+forward_to = [prometheus.remote_write.default.receiver]
+}
+
+EOF
+  else
+    cat <<EOF >> "$CONFIG"
+prometheus.scrape "rabbit" {
+targets = [
+  {"__address__" = "127.0.0.1:15692", "instance" = "one"},
+]
+
+forward_to = [prometheus.remote_write.default.receiver]
+}
+
+EOF
+  fi
+  echo "RabbitMQ scrape endpoint added"
 fi
 
 # Detect Redis
-if (ss -ltn | grep -qE :6379) || [ -n "${redis_connection_string}" ]; then
+if { (ss -ltn | grep -qE :6379) || [ -n "${redis_connection_string}" ]; } && [ "${redis_disabled}" != true ]; then
   echo "Redis detected"
   # Check if connection string already set in environment
   if [ -z "${redis_connection_string}" ]; then
@@ -695,15 +734,11 @@ prometheus.scrape "redis" {
 
 EOF
   fi
-  if [ -n "${redis_disabled}" ] && [ "${redis_disabled}" = true ]; then
-    echo "Redis integration configured"
-  else
-    echo "Redis integration enabled"
-  fi
+  echo "Redis integration enabled"
 fi
 
 # Detect Kafka
-if (ss -ltn | grep -qE :9092) || [ -n "${kafka_connection_string}" ]; then
+if { (ss -ltn | grep -qE :9092) || [ -n "${kafka_connection_string}" ]; } && [ "${kafka_disabled}" != true ]; then
   echo "Kafka detected"
   # Check if connection string already set in environment
   if [ -z "${kafka_connection_string}" ]; then
@@ -731,15 +766,11 @@ prometheus.scrape "kafka" {
 
 EOF
   fi
-  if [ -n "${kafka_disabled}" ] && [ "${kafka_disabled}" = true ]; then
-    echo "Kafka integration configured"
-  else
-    echo "Kafka integration enabled"
-  fi
+  echo "Kafka integration enabled"
 fi
 
 # Detect Elasticsearch
-if (ss -ltn | grep -qE :9200) || [ -n "${elasticsearch_connection_string}" ]; then
+if { (ss -ltn | grep -qE :9200) || [ -n "${elasticsearch_connection_string}" ]; } && [ "${elasticsearch_disabled}" != true ]; then
   echo "Elasticsearch detected"
   if [ -z "${elasticsearch_connection_string}" ]; then
     # Check if credentials already set in environment
@@ -806,15 +837,11 @@ prometheus.scrape "elasticsearch" {
 
 EOF
   fi
-  if [ -n "${elasticsearch_disabled}" ] && [ "${elasticsearch_disabled}" = true ]; then
-    echo "Elasticsearch integration configured"
-  else
-    echo "Elasticsearch integration enabled"
-  fi
+  echo "Elasticsearch integration enabled"
 fi
 
 # Detect Mongo
-if (ss -ltn | grep -qE :27017) || [ -n "${mongodb_connection_string}" ]; then
+if { (ss -ltn | grep -qE :27017) || [ -n "${mongodb_connection_string}" ]; } && [ "${mongodb_disabled}" != true ]; then
   echo "MongoDB detected"
   if [ -z "${mongodb_connection_string}" ]; then
     # Check if credentials already set in environment
@@ -881,15 +908,11 @@ prometheus.scrape "mongodb" {
 
 EOF
   fi
-  if [ -n "${mongo_disabled}" ] && [ "${mongo_disabled}" = true ]; then
-    echo "Mongo integration configured"
-  else
-    echo "MongoDB integration enabled"
-  fi
+  echo "MongoDB integration enabled"
 fi
 
 # Detect OracleDB
-if (ss -ltn | grep -qE :1521) || [ -n "${oracledb_connection_string}" ]; then
+if { (ss -ltn | grep -qE :1521) || [ -n "${oracledb_connection_string}" ]; } && [ "${oracledb_disabled}" != true ]; then
   echo "OracleDB detected"
   if [ -z "${oracledb_connection_string}" ]; then
     # Check if credentials already set in environment
@@ -956,11 +979,7 @@ prometheus.scrape "oracledb" {
 
 EOF
   fi
-  if [ -n "${oracle_disabled}" ] && [ "${oracle_disabled}" = true ]; then
-    echo "OracleDB integration configured"
-  else
-    echo "OracleDB integration enabled"
-  fi
+  echo "OracleDB integration enabled"
 fi
 
 # Add Additional Endpoints
