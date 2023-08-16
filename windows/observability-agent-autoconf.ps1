@@ -127,6 +127,7 @@ prometheus.scrape "windows" {
 "@ | Out-File -FilePath $CONFIG -Append
 Write-Output "Windows exporter component enabled"
 
+# Enable log exporter component
 while ($true) {
     if (-not $env:log_collection)
     {
@@ -209,8 +210,63 @@ loki.write "lokiEndpoint" {
     }
 }
 
+# Enable open telemetry metrics and traces
+while ($true) {
+    if (-not $env:otel_collection)
+    {
+        $ans = Read-Host "Would you like to enable collection of open telemetry metrics and traces? (y/n)" | ForEach-Object { $_.ToLower() }
+    }
+    elseif ($env:otel_collection = $true) {
+        $ans="y"
+    }
+    else
+    {
+        $ans="n"
+    }
+
+    if ($ans -eq "y") {
+        # Add open telemetry traces
+        @"
+otelcol.receiver.otlp "default" {
+    http {
+        endpoint = "0.0.0.0:4318"
+    }
+    output {
+           metrics = [otelcol.exporter.prometheus.default.input]
+           traces = [otelcol.processor.batch.default.input]
+    }
+}
+
+otelcol.processor.batch "default" {
+  send_batch_size = 100000
+  output {
+    traces  = [otelcol.exporter.otlphttp.traceEndpoint.input]
+  }
+}
+
+otelcol.exporter.prometheus "default" {
+    forward_to = [prometheus.remote_write.default.receiver]
+}
+
+otelcol.exporter.otlphttp "traceEndpoint" {
+    client {
+        endpoint = "https://api.fusionreactor.io"
+        headers = {authorization = "$key"}
+        compression = "none"
+    }
+}
+
+"@ | Out-File -FilePath $CONFIG -Append
+        break
+    } elseif ($ans -eq "n") {
+        break
+    } else {
+        Write-Output "Invalid input. Please enter y or n."
+    }
+}
+
 #Detect MySQL
-if ((Get-NetTCPConnection).LocalPort -contains 3306 -or $env:mysql_connection_string){
+if (((Get-NetTCPConnection).LocalPort -contains 3306 -or $env:mysql_connection_string) -and ($env:mysql_disabled -ne $true)){
     Write-Host "MySQL detected"
     # Check if connection string already set in environment
     if (-not $env:mysql_connection_string)
@@ -262,26 +318,22 @@ if ((Get-NetTCPConnection).LocalPort -contains 3306 -or $env:mysql_connection_st
     }
 
     # Add integration
-    if ($env:mysql_disabled -eq $true) {
-        Write-Output "MySQL integration configured"
-    } else {
-        @"
+    @"
 prometheus.exporter.mysql "example" {
-  data_source_name = "$myDatasource"
+data_source_name = "$myDatasource"
 }
 
 prometheus.scrape "mysql" {
-  targets    = prometheus.exporter.mysql.example.targets
-  forward_to = [prometheus.remote_write.default.receiver]
+targets    = prometheus.exporter.mysql.example.targets
+forward_to = [prometheus.remote_write.default.receiver]
 }
 
 "@ | Out-File -FilePath $CONFIG -Append
-        Write-Output "MySQL integration enabled"
-    }
+    Write-Output "MySQL integration enabled"
 }
 
 #Detect MSSQL
-if ((Get-NetTCPConnection).LocalPort -contains 1433 -or $env:mssql_connection_string){
+if (((Get-NetTCPConnection).LocalPort -contains 1433 -or $env:mssql_connection_string) -and ($env:mssql_disabled -ne $true)){
     Write-Host "MSSQL detected"
     # Check if connection string already set in environment
     if (-not $env:mssql_connection_string)
@@ -331,26 +383,22 @@ if ((Get-NetTCPConnection).LocalPort -contains 1433 -or $env:mssql_connection_st
         $msDatasource = $env:mssql_connection_string
     }
     # Add integration
-    if ($env:mssql_disabled -eq $true) {
-        Write-Output "MSSQL integration configured"
-    } else {
-        @"
+    @"
 prometheus.exporter.mssql "example" {
-  connection_string = "$msDatasource"
+connection_string = "$msDatasource"
 }
 
 prometheus.scrape "mssql" {
-  targets    = prometheus.exporter.mssql.example.targets
-  forward_to = [prometheus.remote_write.default.receiver]
+targets    = prometheus.exporter.mssql.example.targets
+forward_to = [prometheus.remote_write.default.receiver]
 }
 
 "@ | Out-File -FilePath $CONFIG -Append
-        Write-Output "MSSQL integration enabled"
-    }
+    Write-Output "MSSQL integration enabled"
 }
 
 #Detect Postgres
-if ((Get-NetTCPConnection).LocalPort -contains 5432 -or $env:postgres_connection_string){
+if (((Get-NetTCPConnection).LocalPort -contains 5432 -or $env:postgres_connection_string) -and ($env:postgres_disabled -ne $true)){
     Write-Host "Postgres detected"
     # Check if connection string already set in environment
     if (-not $env:postgres_connection_string)
@@ -401,73 +449,64 @@ if ((Get-NetTCPConnection).LocalPort -contains 5432 -or $env:postgres_connection
     }
 
     # Add integration
-    if ($env:postgres_disabled -eq $true) {
-        Write-Output "Postgres integration configured"
-    }
-
-    else {
-        @"
+    @"
 prometheus.exporter.postgres "example" {
-    data_source_names = ["$postgresDatasource"]
-    autodiscovery {
-        enabled = true
-    }
+data_source_names = ["$postgresDatasource"]
+autodiscovery {
+    enabled = true
+}
 }
 
 prometheus.scrape "postgres" {
-  targets    = prometheus.exporter.postgres.example.targets
-  forward_to = [prometheus.remote_write.default.receiver]
+targets    = prometheus.exporter.postgres.example.targets
+forward_to = [prometheus.remote_write.default.receiver]
 }
 
 "@ | Out-File -FilePath $CONFIG -Append
-        Write-Output "Postgres integration enabled"
-    }
+    Write-Output "Postgres integration enabled"
 }
 
 #Detect RabbitMQ
-if ((Get-NetTCPConnection).LocalPort -contains 5672 -or $env:rabbitmq_scrape_target)
+if (((Get-NetTCPConnection).LocalPort -contains 5672 -or $env:rabbitmq_scrape_target) -and ($env:rabbitmq_disabled -ne $true))
 {
     Write-Output "RabbitMQ detected"
-    if (!($env:rabbitmq_disabled -eq $true))
+    if (!(Get-NetTCPConnection).LocalPort -contains 15692)
     {
-        if (!(Get-NetTCPConnection).LocalPort -contains 15692)
-        {
-            Write-Output "RabbitMQ exporter is not enabled, see the Observability Agent docs to learn how to enable it"
-        }
-        if ($env:rabbitmq_scrape_target)
-        {
-            # Add the endpoint to the config
-            @"
-prometheus.scrape "rabbit" {
-  targets = [
-    {"__address__" = "$rabbitmq_scrape_target", "instance" = "one"},
-  ]
-
-  forward_to = [prometheus.remote_write.default.receiver]
-}
-
-"@ | Out-File -FilePath $CONFIG -Append
-        }
-        else
-        {
-            # Add the endpoint to the config
-            @"
-prometheus.scrape "rabbit" {
-  targets = [
-    {"__address__" = "127.0.0.1:15692", "instance" = "one"},
-  ]
-
-  forward_to = [prometheus.remote_write.default.receiver]
-}
-
-"@ | Out-File -FilePath $CONFIG -Append
-            Write-Output "RabbitMQ scrape endpoint added"
-        }
+        Write-Output "RabbitMQ exporter is not enabled, see the Observability Agent docs to learn how to enable it"
     }
+    if ($env:rabbitmq_scrape_target)
+    {
+    # Add the endpoint to the config
+        @"
+prometheus.scrape "rabbit" {
+targets = [
+{"__address__" = "$rabbitmq_scrape_target", "instance" = "one"},
+]
+
+forward_to = [prometheus.remote_write.default.receiver]
+}
+
+"@ | Out-File -FilePath $CONFIG -Append
+    }
+    else
+    {
+        # Add the endpoint to the config
+        @"
+prometheus.scrape "rabbit" {
+targets = [
+{"__address__" = "127.0.0.1:15692", "instance" = "one"},
+]
+
+forward_to = [prometheus.remote_write.default.receiver]
+}
+
+"@ | Out-File -FilePath $CONFIG -Append
+        Write-Output "RabbitMQ scrape endpoint added"
+}
 }
 
 # Detect Redis
-if ((Get-NetTCPConnection).LocalPort -contains 6379 -or $env:redis_connection_string){
+if (((Get-NetTCPConnection).LocalPort -contains 6379 -or $env:redis_connection_string) -and ($env:redis_disabled -ne $true)){
     Write-Host "Redis detected"
     # Check if connection string already set in environment
     if (-not $env:redis_connection_string)
@@ -478,26 +517,22 @@ if ((Get-NetTCPConnection).LocalPort -contains 6379 -or $env:redis_connection_st
     }
 
     # Add integration
-    if ($env:redis_disabled -eq $true) {
-        Write-Output "Redis integration configured"
-    } else {
-        @"
+    @"
 prometheus.exporter.redis "example" {
-  redis_addr = "$redisDatasource"
+redis_addr = "$redisDatasource"
 }
 
 prometheus.scrape "redis" {
-  targets    = prometheus.exporter.redis.example.targets
-  forward_to = [prometheus.remote_write.default.receiver]
+targets    = prometheus.exporter.redis.example.targets
+forward_to = [prometheus.remote_write.default.receiver]
 }
 
 "@ | Out-File -FilePath $CONFIG -Append
-        Write-Output "Redis integration enabled"
-    }
+    Write-Output "Redis integration enabled"
 }
 
 # Detect Kafka
-if ((Get-NetTCPConnection).LocalPort -contains 9092 -or $env:kafka_connection_string){
+if (((Get-NetTCPConnection).LocalPort -contains 9092 -or $env:kafka_connection_string) -and ($env:kafka_disabled -ne $true)){
     Write-Host "Kafka detected"
     # Check if connection string already set in environment
     if (-not $env:kafka_connection_string)
@@ -508,26 +543,22 @@ if ((Get-NetTCPConnection).LocalPort -contains 9092 -or $env:kafka_connection_st
     }
 
     # Add integration
-    if ($env:kafka_disabled -eq $true) {
-        Write-Output "Kafka integration configured"
-    } else {
-        @"
+    @"
 prometheus.exporter.kafka "example" {
-  kafka_uris = ["$kafkaDatasource"]
+kafka_uris = ["$kafkaDatasource"]
 }
 
 prometheus.scrape "kafka" {
-  targets    = prometheus.exporter.kafka.example.targets
-  forward_to = [prometheus.remote_write.default.receiver]
+targets    = prometheus.exporter.kafka.example.targets
+forward_to = [prometheus.remote_write.default.receiver]
 }
 
 "@ | Out-File -FilePath $CONFIG -Append
-        Write-Output "Kafka integration enabled"
-    }
+    Write-Output "Kafka integration enabled"
 }
 
 #Detect Elasticsearch
-if ((Get-NetTCPConnection).LocalPort -contains 9200 -or $env:elasticsearch_connection_string){
+if (((Get-NetTCPConnection).LocalPort -contains 9200 -or $env:elasticsearch_connection_string) -and ($env:elasticsearch_disabled -ne $true)){
     Write-Host "Elasticsearch detected"
     # Check if connection string already set in environment
     if (-not $env:elasticsearch_connection_string)
@@ -577,26 +608,22 @@ if ((Get-NetTCPConnection).LocalPort -contains 9200 -or $env:elasticsearch_conne
     }
 
     # Add integration
-    if ($env:elasticsearch_disabled -eq $true) {
-        Write-Output "Elasticsearch integration configured"
-    } else {
-        @"
+    @"
 prometheus.exporter.elasticsearch "example" {
-  data_source_name = "$esDatasource"
+data_source_name = "$esDatasource"
 }
 
 prometheus.scrape "elasticsearch" {
-  targets    = prometheus.exporter.elasticsearch.example.targets
-  forward_to = [prometheus.remote_write.default.receiver]
+targets    = prometheus.exporter.elasticsearch.example.targets
+forward_to = [prometheus.remote_write.default.receiver]
 }
 
 "@ | Out-File -FilePath $CONFIG -Append
-        Write-Output "Elasticsearch integration enabled"
-    }
+    Write-Output "Elasticsearch integration enabled"
 }
 
 #Detect Mongo
-if ((Get-NetTCPConnection).LocalPort -contains 27017 -or $env:mongodb_connection_string){
+if (((Get-NetTCPConnection).LocalPort -contains 27017 -or $env:mongodb_connection_string) -and ($env:mongodb_disabled -ne $true)){
     Write-Host "MongoDB detected"
     # Check if connection string already set in environment
     if (-not $env:mongodb_connection_string)
@@ -646,26 +673,22 @@ if ((Get-NetTCPConnection).LocalPort -contains 27017 -or $env:mongodb_connection
     }
 
     # Add integration
-    if ($env:mongo_disabled -eq $true) {
-        Write-Output "MongoDB integration configured"
-    } else {
-        @"
+    @"
 prometheus.exporter.mongodb "example" {
-  mongodb_uri = "$mongoDatasource"
+mongodb_uri = "$mongoDatasource"
 }
 
 prometheus.scrape "mongodb" {
-  targets    = prometheus.exporter.mongodb.example.targets
-  forward_to = [prometheus.remote_write.default.receiver]
+targets    = prometheus.exporter.mongodb.example.targets
+forward_to = [prometheus.remote_write.default.receiver]
 }
 
 "@ | Out-File -FilePath $CONFIG -Append
-        Write-Output "MongoDB integration enabled"
-    }
+    Write-Output "MongoDB integration enabled"
 }
 
 #Detect OracleDB
-if ((Get-NetTCPConnection).LocalPort -contains 1521 -or $env:oracledb_connection_string){
+if (((Get-NetTCPConnection).LocalPort -contains 1521 -or $env:oracledb_connection_string) -and ($env:oracledb_disabled -ne $true)){
     Write-Host "OracleDB detected"
     # Check if connection string already set in environment
     if (-not $env:oracledb_connection_string)
@@ -714,22 +737,18 @@ if ((Get-NetTCPConnection).LocalPort -contains 1521 -or $env:oracledb_connection
     }
 
     # Add integration
-    if ($env:oracledb_disabled -eq $true) {
-        Write-Output "OracleDB integration configured"
-    } else {
-        @"
+    @"
 prometheus.exporter.oracledb "example" {
-  connection_string = "$oracleDatasource"
+connection_string = "$oracleDatasource"
 }
 
 prometheus.scrape "oracledb" {
-  targets    = prometheus.exporter.oracledb.example.targets
-  forward_to = [prometheus.remote_write.default.receiver]
+targets    = prometheus.exporter.oracledb.example.targets
+forward_to = [prometheus.remote_write.default.receiver]
 }
 
 "@ | Out-File -FilePath $CONFIG -Append
-        Write-Output "OracleDB integration enabled"
-    }
+    Write-Output "OracleDB integration enabled"
 }
 
 if ($env:scrape_targets) {

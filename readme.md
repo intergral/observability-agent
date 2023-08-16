@@ -21,10 +21,11 @@ for must be running on its default port, these are:
 | `Kafka`             | `9092`       |
 | `Elasticsearch`     | `9200`       |
 | `Mongo`             | `27017`      |
+| `OracleDB`          | `1521`       |
 
 ## Procedure
 
-> **The [Static Mode](https://grafana.com/docs/agent/latest/static/) installer has been deprecated in favour of a [Flow Mode](https://grafana.com/docs/agent/latest/flow/) installer** </br>
+> **The [Static Mode](https://grafana.com/docs/agent/latest/static/) installer has been deprecated and superseded by the [Flow Mode](https://grafana.com/docs/agent/latest/flow/) installer** </br>
 
 > **[Latest Release](https://github.com/intergral/observability-agent/releases)** </br>
 
@@ -80,25 +81,28 @@ To add integrations without being prompted for credentials, there are several en
 
 ### Metric Exporters
 
-| Variable                 | Type     | Description                                                 |
-|--------------------------|----------|-------------------------------------------------------------|
-| `mysql_user`             | `string` | User for the local Mysql database                           |
-| `mysql_password`         | `string` | Password for the local Mysql database                       |
-| `mysql_disabled`         | `bool`   | Enables/Disables the Mysql exporter (enabled by default)    |
-| `mssql_user`             | `string` | User for the local Mssql database                           |
-| `mssql_password`         | `string` | Password for the local Mssql database                       |
-| `mssql_disabled`         | `bool`   | Enables/Disables the Mssql exporter (enabled by default)    |
-| `postgres_user`          | `string` | User for the local Postgres database                        |
-| `postgres_password`      | `string` | Password for the local Postgres database                    |
-| `postgres_disabled`      | `bool`   | Enables/Disables the Postgres exporter (enabled by default) |
-| `rabbitmq_disabled`      | `bool`   | Enables/Disables the RabbitMQ exporter (enabled by default) |
-| `redis_disabled`         | `bool`   | Enables/Disables the Redis exporter (enabled by default)    |
-| `elasticsearch_user`     | `string` | User for the Elastic search instance                        |
-| `elasticsearch_password` | `string` | Password for the Elastic search instance                    |
-| `mongodb_user`           | `string` | User for the local Mongo database                           |
-| `mongodb_password`       | `string` | Password for the local Mongo database                       |
-| `oracledb_user`          | `string` | User for the local Oracle database                          |
-| `oracledb_password`      | `string` | Password for the local Oracle database                      |
+| Variable                 | Type     | Description                                                       |
+|--------------------------|----------|-------------------------------------------------------------------|
+| `mysql_user`             | `string` | User for the local Mysql database                                 |
+| `mysql_password`         | `string` | Password for the local Mysql database                             |
+| `mysql_disabled`         | `bool`   | Enables/Disables the Mysql exporter (enabled by default)          |
+| `mssql_user`             | `string` | User for the local Mssql database                                 |
+| `mssql_password`         | `string` | Password for the local Mssql database                             |
+| `mssql_disabled`         | `bool`   | Enables/Disables the Mssql exporter (enabled by default)          |
+| `postgres_user`          | `string` | User for the local Postgres database                              |
+| `postgres_password`      | `string` | Password for the local Postgres database                          |
+| `postgres_disabled`      | `bool`   | Enables/Disables the Postgres exporter (enabled by default)       |
+| `rabbitmq_disabled`      | `bool`   | Enables/Disables the RabbitMQ exporter (enabled by default)       |
+| `redis_disabled`         | `bool`   | Enables/Disables the Redis exporter (enabled by default)          |
+| `elasticsearch_user`     | `string` | User for the Elastic search instance                              |
+| `elasticsearch_password` | `string` | Password for the Elastic search instance                          |
+| `elasticsearch_disabled` | `bool`   | Enables/Disables the Elastic search exporter (enabled by default) |
+| `mongodb_user`           | `string` | User for the local Mongo database                                 |
+| `mongodb_password`       | `string` | Password for the local Mongo database                             |
+| `mongodb_disabled`       | `bool`   | Enables/Disables the MongoDB exporter (enabled by default)        |
+| `oracledb_user`          | `string` | User for the local Oracle database                                |
+| `oracledb_password`      | `string` | Password for the local Oracle database                            |
+| `oracledb_disabled`      | `bool`   | Enables/Disables the OracleDB exporter (enabled by default)       |
 
 ### Exporting metrics from external machines
 
@@ -122,11 +126,19 @@ RabbitMQ requires an internal exporter to be enabled. Visit [the documentation](
 
 If you wish to enable log collection, the following environment variables must be set:
 
-| Variable           | Type     | Description                                     |
-|--------------------|----------|-------------------------------------------------|
-| `log_collection`   | `bool`   | Enables log collection                          |
-| `service_name`     | `string` | Set a name for you log collection service       |
-| `log_path`         | `string` | Set a file path for your log collection service |
+| Variable           | Type     | Example         | Description                                     |
+|--------------------|----------|-----------------|-------------------------------------------------|
+| `log_collection`   | `bool`   | `true`          | Enables log collection                          |
+| `service_name`     | `string` | `service`       | Set a name for you log collection service       |
+| `log_path`         | `string` | `/service/logs` | Set a file path for your log collection service |
+
+### Open Telemetry
+
+If you wish to enable Open Telemetry metrics and traces, the following environment variables must be set:
+
+| Variable          | Type     | Example | Description                                     |
+|-------------------|----------|---------|-------------------------------------------------|
+| `otel_collection` | `bool`   | `true`  | Enables Open Telemetry metrics and traces       |
 
 ### Scraping from additional exporters
 At present, there are some integrations we don't support out the box. Use of these integrations is via a scrape endpoint.
