@@ -1046,7 +1046,7 @@ if [ "${asBinary}" = true ]; then
   echo "To run the binary, run: $binLocation --config.file $CONFIG"
 
 # If prompt flag is used, it's running in Docker (we don't need to move files or restart the agent for docker)
-elif [ "$PROMPT" != false ]; then
+elif [ "$PROMPT" != false ] || [ "${start_service}" = true ]; then
   mv $CONFIG /etc/grafana-agent-flow.river
   echo "Config file can be found at /etc/grafana-agent-flow.river"
   systemctl start grafana-agent-flow.service
