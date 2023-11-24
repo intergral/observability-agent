@@ -676,25 +676,21 @@ fi
 # Detect RabbitMQ
 if { (ss -ltn | grep -qE :5672) || [ -n "${rabbitmq_scrape_target}" ]; } && [ "${rabbitmq_disabled}" != true ]; then
   echo "RabbitMQ detected"
+  scrape_enabled=true
   if ! (ss -ltn | grep -qE :15692); then
-    echo "RabbitMQ exporter is not enabled, see the Observability Agent docs to learn how to enable it"
+    echo "RabbitMQ exporter is not enabled on port 15692, see the Observability Agent docs to learn how to enable it"
+    # don't add a scrape target if not explicitly set and explicitly disabled when auto detect fails to find exporter
+    if [ -z "${rabbitmq_scrape_target}" ] && [ -n "${rabbitmq_no_exporter_no_scrape}" ]; then
+      scrape_enabled=false
+    fi
   fi
-  if [ -n "${rabbitmq_scrape_target}" ]; then
+  if [ "${scrape_enabled}" = true ]; then
+    echo "RabbitMQ scrape endpoint added"
+    scrape_target=${rabbitmq_scrape_target:='127.0.0.1:15692'}
     cat <<EOF >> "$CONFIG"
 prometheus.scrape "rabbit" {
 targets = [
-  {"__address__" = "$rabbitmq_scrape_target", "instance" = "one"},
-]
-
-forward_to = [prometheus.remote_write.default.receiver]
-}
-
-EOF
-  else
-    cat <<EOF >> "$CONFIG"
-prometheus.scrape "rabbit" {
-targets = [
-  {"__address__" = "127.0.0.1:15692", "instance" = "one"},
+  {"__address__" = "$scrape_target", "instance" = "one"},
 ]
 
 forward_to = [prometheus.remote_write.default.receiver]
@@ -702,7 +698,6 @@ forward_to = [prometheus.remote_write.default.receiver]
 
 EOF
   fi
-  echo "RabbitMQ scrape endpoint added"
 fi
 
 # Detect Redis
