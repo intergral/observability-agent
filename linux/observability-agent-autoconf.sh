@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Flags
 while [ "$#" -gt 0 ]; do
   case "$1" in
