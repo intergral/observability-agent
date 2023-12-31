@@ -169,15 +169,6 @@ while ($true) {
             $logsEndpoint="https://api.fusionreactor.io/v1/logs"
         }
 
-        if ($env:log_user)
-        {
-            $logUser=$env:log_user
-        }
-        else
-        {
-            $logUser = Read-Host "Enter your endpoint user"
-        }
-
         # Add log collection
         @"
 discovery.file "varlog" {
