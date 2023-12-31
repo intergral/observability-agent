@@ -308,12 +308,12 @@ echo "Prometheus remote write component enabled"
 
 # Enable node exporter component
 cat <<EOF >> "$CONFIG"
-prometheus.exporter.unix {
+prometheus.exporter.unix "example" {
 
 }
 
 prometheus.scrape "unix" {
-	targets    = prometheus.exporter.unix.targets
+	targets    = prometheus.exporter.unix.example.targets
 	forward_to = [prometheus.remote_write.default.receiver]
 }
 
