@@ -357,15 +357,6 @@ while true; do
       logsEndpoint="https://api.fusionreactor.io/v1/logs"
     fi
 
-    if [ "$PROMPT" != false ] && [ -z "${log_user}" ]; then
-      echo "Enter your endpoint user: "
-      read -r logUser
-    elif [ -n "${logs_user}" ]; then
-      logUser="${log_user}"
-    else
-      echo "Endpoint user not set"
-    fi
-
     # Add log collection
     cat <<EOF >> "$CONFIG"
 discovery.file "varlog" {

@@ -77,7 +77,6 @@ To add integrations without being prompted for credentials, there are several en
 | `api_key`          | `string` | API Key to authenticate with your FusionReactor Cloud Account  |
 | `metrics_Endpoint` | `string` | Default: `https://api.fusionreactor.io/v1/metrics`             |
 | `logs_Endpoint`    | `string` | Default: `https://api.fusionreactor.io/v1/logs`                |
-| `logs_user`        | `string` | Username to authenticate with your FusionReactor Cloud Account |
 
 ### Metric Exporters
 
