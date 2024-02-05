@@ -359,14 +359,14 @@ while true; do
 
     # Add log collection
     cat <<EOF >> "$CONFIG"
-discovery.file "varlog" {
+local.file_match "varlog" {
   path_targets = [
     {__path__ = "$path", job = "$job"},
   ]
 }
 
 loki.source.file "httpd" {
-  targets    = discovery.file.varlog.targets
+  targets    = local.file_match.varlog.targets
   forward_to = [loki.write.lokiEndpoint.receiver]
 }
 
