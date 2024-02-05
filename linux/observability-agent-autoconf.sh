@@ -111,7 +111,7 @@ if ! which curl >/dev/null; then
       yum -y install curl
     elif [ "$OS" = "SUSE" ]; then
       echo "Installing curl..."
-      zypper -y install curl
+      zypper install -y curl
     elif [ "$OS" = "macOS" ]; then
       echo "curl required"
       exit 1
@@ -131,7 +131,7 @@ if ! which tar >/dev/null; then
       yum -y install tar
     elif [ "$OS" = "SUSE" ]; then
       echo "Installing tar..."
-      zypper -y install tar
+      zypper install -y tar
     elif [ "$OS" = "macOS" ]; then
       echo "tar required"
       exit 1
@@ -151,7 +151,7 @@ if ! which ss >/dev/null; then
       yum -y install iproute2
     elif [ "$OS" = "SUSE" ]; then
       echo "Installing iproute2..."
-      zypper -y install iproute2
+      zypper install -y iproute2
     elif [ "$OS" = "macOS" ]; then
       echo "iproute2mac required"
       exit 1
@@ -171,7 +171,7 @@ if ! which jq >/dev/null; then
       yum -y install jq
     elif [ "$OS" = "SUSE" ]; then
       echo "Installing jq..."
-      zypper -y install jq
+      zypper install -y jq
     elif [ "$OS" = "macOS" ]; then
       echo "jq required"
       exit 1
