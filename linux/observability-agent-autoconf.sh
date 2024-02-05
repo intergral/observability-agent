@@ -670,11 +670,12 @@ if { (ss -ltn | grep -qE :5672) || [ -n "${rabbitmq_scrape_target}" ]; } && [ "$
   if ! (ss -ltn | grep -qE :15692); then
     echo "RabbitMQ exporter is not enabled, see the Observability Agent docs to learn how to enable it"
   fi
+  instance_label=${rabbitmq_instance_label:=${rabbitmq_scrape_target:="127.0.0.1:15692"}}
   if [ -n "${rabbitmq_scrape_target}" ]; then
     cat <<EOF >> "$CONFIG"
 prometheus.scrape "rabbit" {
 targets = [
-  {"__address__" = "$rabbitmq_scrape_target", "instance" = "one"},
+  {"__address__" = "$rabbitmq_scrape_target", "instance" = "${instance_label}"},
 ]
 
 forward_to = [prometheus.remote_write.default.receiver]
@@ -685,7 +686,7 @@ EOF
     cat <<EOF >> "$CONFIG"
 prometheus.scrape "rabbit" {
 targets = [
-  {"__address__" = "127.0.0.1:15692", "instance" = "one"},
+  {"__address__" = "127.0.0.1:15692", "instance" = "${instance_label}"},
 ]
 
 forward_to = [prometheus.remote_write.default.receiver]
