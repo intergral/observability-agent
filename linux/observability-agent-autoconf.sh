@@ -1040,6 +1040,8 @@ if [ "${asBinary}" = true ]; then
 elif [ "$PROMPT" != false ] || [ "${start_service}" = true ]; then
   mv $CONFIG /etc/grafana-agent-flow.river
   echo "Config file can be found at /etc/grafana-agent-flow.river"
+  systemctl enable grafana-agent-flow.service
+  echo "Grafana Agent Flow enabled"
   systemctl start grafana-agent-flow.service
   echo "Grafana Agent Flow started"
 fi
