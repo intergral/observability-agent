@@ -24,6 +24,14 @@ while ($args) {
             $args = $args[2..$args.Count]
             break
         }
+        "--disable-dl-progress-bar" {
+            if ($args[1] -eq "true")
+            {
+                $DisableDownloadProgressBar = $true
+            }
+            $args = $args[2..$args.Count]
+            break
+        }
         default {
             Write-Error "Invalid option: $($args[0])"
             exit 1
@@ -43,6 +51,10 @@ if ($INSTALL -ne $false) {
     $installPath = "$PSScriptRoot/grafana-agent-flow-installer.exe"
 
     # Download the file
+    if ($DisableDownloadProgressBar -eq $true)
+    {
+        $ProgressPreference = 'SilentlyContinue'
+    }
     Invoke-WebRequest -Uri $url -OutFile $outputPath
 
     # Extract the contents of the zip file

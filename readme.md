@@ -61,6 +61,8 @@ You can use both `--install` and `--config.file` options in the same run command
 or </br>
 `sudo path/to/observability-agent-autoconf.sh --config.file path/to/config --install false`
 
+For Windows, you can add `--disable-dl-progress-bar true` to potentially speed up downloads.
+
 ## Docker
 When running in Docker, you will not be prompted for any information. Therefore, you must specify an api key before running. Additionally, you must set the relevant
 environment variables for whichever services you have running, so they can be configured. These environment variables can be found in the [Environment Variables](#environment-variables) section.
