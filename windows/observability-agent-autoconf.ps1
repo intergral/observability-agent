@@ -133,7 +133,7 @@ while ($true) {
     {
         $ans = Read-Host "Is there a service you want to enable log collection for? (y/n)" | ForEach-Object { $_.ToLower() }
     }
-    elseif ($env:log_collection = $true) {
+    elseif ($env:log_collection -eq $true) {
         $ans="y"
     }
     else
@@ -207,7 +207,7 @@ while ($true) {
     {
         $ans = Read-Host "Would you like to enable collection of open telemetry metrics and traces? (y/n)" | ForEach-Object { $_.ToLower() }
     }
-    elseif ($env:otel_collection = $true) {
+    elseif ($env:otel_collection -eq $true) {
         $ans="y"
     }
     else
