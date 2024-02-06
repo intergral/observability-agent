@@ -832,8 +832,9 @@ Write-Host "Config file can be found at C:\Program Files\Grafana Agent Flow\conf
 
 # Service might not be created yet if running script with `--prompt false`
 # This attempts to wait until the service can be restarted - there's probably a better way to do this
+Write-Output "Attempting to restart service"
 $attempts = 0
-while ((Get-Service -Name "Grafana Agent Flow" -ErrorAction SilentlyContinue) -eq $null -and $attempts -le 4)
+while ($attempts -le 4 -and (Get-Service -Name "Grafana Agent Flow" -ErrorAction SilentlyContinue) -eq $null)
 {
     $attempts += 1
     Start-Sleep -Seconds 2
