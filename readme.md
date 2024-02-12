@@ -56,6 +56,8 @@ To modify a pre-existing config file, add `--config.file`, followed by the path 
 `sudo path/to/observability-agent-autoconf.sh --config.file path/to/configfile`  
 A backup of your original file will be created
 
+To disable prompts that wait for user input, add `--prompt false` as command arguments.
+
 You can use both `--install` and `--config.file` options in the same run command, order is irrelevant. For example: </br>
 `sudo path/to/observability-agent-autoconf.sh --install false --config.file path/to/config`</br>
 or </br>

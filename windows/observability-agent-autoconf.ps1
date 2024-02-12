@@ -24,6 +24,14 @@ while ($args) {
             $args = $args[2..$args.Count]
             break
         }
+        "--prompt" {
+            if ($args[1] -eq "false")
+            {
+                $PROMPT = $false
+            }
+            $args = $args[2..$args.Count]
+            break
+        }
         default {
             Write-Error "Invalid option: $($args[0])"
             exit 1
@@ -43,13 +51,23 @@ if ($INSTALL -ne $false) {
     $installPath = "$PSScriptRoot/grafana-agent-flow-installer.exe"
 
     # Download the file
+    Write-Output "Downloading agent installer"
     Invoke-WebRequest -Uri $url -OutFile $outputPath
 
     # Extract the contents of the zip file
+    Write-Output "Extracting agent installer"
     Expand-Archive -Path $outputPath -DestinationPath $installPath -Force
 
     # Run the installer
-    Start-Process "$installPath\grafana-agent-flow-installer.exe"
+    Write-Output "Running agent installer"
+    if ($PROMPT -eq $false)
+    {
+        Start-Process "$installPath\grafana-agent-flow-installer.exe" "/S"
+    }
+    else
+    {
+        Start-Process "$installPath\grafana-agent-flow-installer.exe"
+    }
 }
 
 #Check if an env file exists
@@ -778,7 +796,7 @@ prometheus.scrape "endpoints" {
     Write-Host "Scrape endpoints added"
 }
 
-while ($true)
+while ($PROMPT -ne $false -and $true)
 {
     @"
 prometheus.scrape "endpoints" {
@@ -823,5 +841,16 @@ Write-Output "Config file updated"
 
 Move-Item -Path $CONFIG -Destination "C:\Program Files\Grafana Agent Flow\config.river" -Force
 Write-Host "Config file can be found at C:\Program Files\Grafana Agent Flow\config.river"
+
+# Service might not be created yet if running script with `--prompt false`
+# This attempts to wait until the service can be restarted - there's probably a better way to do this
+Write-Output "Attempting to restart service"
+$attempts = 0
+while ($attempts -le 4 -and (Get-Service -Name "Grafana Agent Flow" -ErrorAction SilentlyContinue) -eq $null)
+{
+    $attempts += 1
+    Start-Sleep -Seconds 2
+}
+
 Restart-Service -Name "Grafana Agent Flow" -Force
 Write-Output "Grafana Agent Flow started"
