@@ -110,7 +110,7 @@ logging {
   format = "logfmt"
 }
 
-"@ | Out-File -FilePath $CONFIG
+"@ | Out-File -FilePath $CONFIG -encoding utf8
 Write-Output "Prometheus remote write component enabled"
 
 # Enable windows exporter component
@@ -124,7 +124,7 @@ prometheus.scrape "windows" {
 	forward_to = [prometheus.remote_write.default.receiver]
 }
 
-"@ | Out-File -FilePath $CONFIG -Append
+"@ | Out-File -FilePath $CONFIG -Append -encoding utf8
 Write-Output "Windows exporter component enabled"
 
 # Enable log exporter component
@@ -192,7 +192,7 @@ loki.write "lokiEndpoint" {
   }
 }
 
-"@ | Out-File -FilePath $CONFIG -Append
+"@ | Out-File -FilePath $CONFIG -Append -encoding utf8
         break
     } elseif ($ans -eq "n") {
         break
@@ -247,7 +247,7 @@ otelcol.exporter.otlphttp "traceEndpoint" {
     }
 }
 
-"@ | Out-File -FilePath $CONFIG -Append
+"@ | Out-File -FilePath $CONFIG -Append -encoding utf8
         break
     } elseif ($ans -eq "n") {
         break
@@ -319,7 +319,7 @@ targets    = prometheus.exporter.mysql.example.targets
 forward_to = [prometheus.remote_write.default.receiver]
 }
 
-"@ | Out-File -FilePath $CONFIG -Append
+"@ | Out-File -FilePath $CONFIG -Append -encoding utf8
     Write-Output "MySQL integration enabled"
 }
 
@@ -384,7 +384,7 @@ targets    = prometheus.exporter.mssql.example.targets
 forward_to = [prometheus.remote_write.default.receiver]
 }
 
-"@ | Out-File -FilePath $CONFIG -Append
+"@ | Out-File -FilePath $CONFIG -Append -encoding utf8
     Write-Output "MSSQL integration enabled"
 }
 
@@ -453,7 +453,7 @@ targets    = prometheus.exporter.postgres.example.targets
 forward_to = [prometheus.remote_write.default.receiver]
 }
 
-"@ | Out-File -FilePath $CONFIG -Append
+"@ | Out-File -FilePath $CONFIG -Append -encoding utf8
     Write-Output "Postgres integration enabled"
 }
 
@@ -489,7 +489,7 @@ targets = [
 forward_to = [prometheus.remote_write.default.receiver]
 }
 
-"@ | Out-File -FilePath $CONFIG -Append
+"@ | Out-File -FilePath $CONFIG -Append -encoding utf8
     }
     else
     {
@@ -503,7 +503,7 @@ targets = [
 forward_to = [prometheus.remote_write.default.receiver]
 }
 
-"@ | Out-File -FilePath $CONFIG -Append
+"@ | Out-File -FilePath $CONFIG -Append -encoding utf8
         Write-Output "RabbitMQ scrape endpoint added"
 }
 }
@@ -530,7 +530,7 @@ targets    = prometheus.exporter.redis.example.targets
 forward_to = [prometheus.remote_write.default.receiver]
 }
 
-"@ | Out-File -FilePath $CONFIG -Append
+"@ | Out-File -FilePath $CONFIG -Append -encoding utf8
     Write-Output "Redis integration enabled"
 }
 
@@ -556,7 +556,7 @@ targets    = prometheus.exporter.kafka.example.targets
 forward_to = [prometheus.remote_write.default.receiver]
 }
 
-"@ | Out-File -FilePath $CONFIG -Append
+"@ | Out-File -FilePath $CONFIG -Append -encoding utf8
     Write-Output "Kafka integration enabled"
 }
 
@@ -621,7 +621,7 @@ targets    = prometheus.exporter.elasticsearch.example.targets
 forward_to = [prometheus.remote_write.default.receiver]
 }
 
-"@ | Out-File -FilePath $CONFIG -Append
+"@ | Out-File -FilePath $CONFIG -Append -encoding utf8
     Write-Output "Elasticsearch integration enabled"
 }
 
@@ -686,7 +686,7 @@ targets    = prometheus.exporter.mongodb.example.targets
 forward_to = [prometheus.remote_write.default.receiver]
 }
 
-"@ | Out-File -FilePath $CONFIG -Append
+"@ | Out-File -FilePath $CONFIG -Append -encoding utf8
     Write-Output "MongoDB integration enabled"
 }
 
@@ -750,7 +750,7 @@ targets    = prometheus.exporter.oracledb.example.targets
 forward_to = [prometheus.remote_write.default.receiver]
 }
 
-"@ | Out-File -FilePath $CONFIG -Append
+"@ | Out-File -FilePath $CONFIG -Append -encoding utf8
     Write-Output "OracleDB integration enabled"
 }
 
@@ -760,21 +760,21 @@ if ($env:scrape_targets) {
     @"
 prometheus.scrape "endpoints" {
   targets = [
-"@ | Out-File -FilePath $CONFIG -Append
+"@ | Out-File -FilePath $CONFIG -Append -encoding utf8
 
     # Add the jobs and targets to the config
     for ($i=0; $i -lt $scrapeTargets.Length; $i++) {
         # Add the endpoint to the config
         @"
     {"__address__" = "${scrapeTargets[i]}"},
-"@ | Out-File -FilePath $CONFIG -Append
+"@ | Out-File -FilePath $CONFIG -Append -encoding utf8
     }
     @"
   ]
   forward_to = [prometheus.remote_write.default.receiver]
 }
 
-"@ | Out-File -FilePath $CONFIG -Append
+"@ | Out-File -FilePath $CONFIG -Append -encoding utf8
     Write-Host "Scrape endpoints added"
 }
 
@@ -783,7 +783,7 @@ while ($true)
     @"
 prometheus.scrape "endpoints" {
   targets = [
-"@ | Out-File -FilePath $CONFIG -Append
+"@ | Out-File -FilePath $CONFIG -Append -encoding utf8
 
     $ans = Read-Host "Is there an additional endpoint you would like to scrape? (y/n)" | ForEach-Object { $_.ToLower() }
     if ($ans -eq "y") {
@@ -798,7 +798,7 @@ prometheus.scrape "endpoints" {
             # Add the endpoint to the config
             @"
     {"__address__" = "$endpointTarget"},
-"@ | Out-File -FilePath $CONFIG -Append
+"@ | Out-File -FilePath $CONFIG -Append -encoding utf8
         }
     } elseif ($ans -eq "n") {
         @"
@@ -806,7 +806,7 @@ prometheus.scrape "endpoints" {
   forward_to = [prometheus.remote_write.default.receiver]
 }
 
-"@ | Out-File -FilePath $CONFIG -Append
+"@ | Out-File -FilePath $CONFIG -Append -encoding utf8
         break
     } else {
         Write-Output "Invalid input. Please enter y or n."
@@ -816,7 +816,7 @@ prometheus.scrape "endpoints" {
   forward_to = [prometheus.remote_write.default.receiver]
 }
 
-"@ | Out-File -FilePath $CONFIG -Append
+"@ | Out-File -FilePath $CONFIG -Append -encoding utf8
     break
 }
 Write-Output "Config file updated"
