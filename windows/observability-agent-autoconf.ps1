@@ -465,13 +465,25 @@ if (((Get-NetTCPConnection).LocalPort -contains 5672 -or $env:rabbitmq_scrape_ta
     {
         Write-Output "RabbitMQ exporter is not enabled, see the Observability Agent docs to learn how to enable it"
     }
+    if ($env:rabbitmq_instance_label)
+    {
+        $instance_label = $env:rabbitmq_instance_label
+    }
+    elseif ($env:rabbitmq_scrape_target)
+    {
+        $instance_label = $env:rabbitmq_scrape_target
+    }
+    else
+    {
+        $instance_label = "127.0.0.1:15692"
+    }
     if ($env:rabbitmq_scrape_target)
     {
     # Add the endpoint to the config
         @"
 prometheus.scrape "rabbit" {
 targets = [
-{"__address__" = "$rabbitmq_scrape_target", "instance" = "one"},
+{"__address__" = "$rabbitmq_scrape_target", "instance" = "$instance_label"},
 ]
 
 forward_to = [prometheus.remote_write.default.receiver]
@@ -485,7 +497,7 @@ forward_to = [prometheus.remote_write.default.receiver]
         @"
 prometheus.scrape "rabbit" {
 targets = [
-{"__address__" = "127.0.0.1:15692", "instance" = "one"},
+{"__address__" = "127.0.0.1:15692", "instance" = "$instance_label"},
 ]
 
 forward_to = [prometheus.remote_write.default.receiver]
