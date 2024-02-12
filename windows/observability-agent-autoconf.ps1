@@ -134,7 +134,7 @@ Write-Output "Prometheus remote write component enabled"
 # Enable windows exporter component
 @"
 prometheus.exporter.windows "example" {
-    enabled_collectors = "cpu,cs,logical_disk,net,os,service,system,textfile,iis"
+    enabled_collectors = ["cpu","cs","logical_disk","net","os","service","system","textfile","iis"]
 }
 
 prometheus.scrape "windows" {
