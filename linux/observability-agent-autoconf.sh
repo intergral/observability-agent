@@ -111,7 +111,7 @@ if ! which curl >/dev/null; then
       yum -y install curl
     elif [ "$OS" = "SUSE" ]; then
       echo "Installing curl..."
-      zypper -y install curl
+      zypper install -y curl
     elif [ "$OS" = "macOS" ]; then
       echo "curl required"
       exit 1
@@ -131,7 +131,7 @@ if ! which tar >/dev/null; then
       yum -y install tar
     elif [ "$OS" = "SUSE" ]; then
       echo "Installing tar..."
-      zypper -y install tar
+      zypper install -y tar
     elif [ "$OS" = "macOS" ]; then
       echo "tar required"
       exit 1
@@ -151,7 +151,7 @@ if ! which ss >/dev/null; then
       yum -y install iproute2
     elif [ "$OS" = "SUSE" ]; then
       echo "Installing iproute2..."
-      zypper -y install iproute2
+      zypper install -y iproute2
     elif [ "$OS" = "macOS" ]; then
       echo "iproute2mac required"
       exit 1
@@ -171,7 +171,7 @@ if ! which jq >/dev/null; then
       yum -y install jq
     elif [ "$OS" = "SUSE" ]; then
       echo "Installing jq..."
-      zypper -y install jq
+      zypper install -y jq
     elif [ "$OS" = "macOS" ]; then
       echo "jq required"
       exit 1
@@ -192,8 +192,7 @@ if [ "$INSTALL" != false ]; then
     if [ "$ARCH" != "unsupported" ]; then
       echo "Downloading binary..."
       # download the binary
-      DOWNLOAD_URL=$(curl -s https://api.github.com/repos/grafana/agent/releases/latest | jq ".assets[] | select((.name | test(\"flow\")) and (.name|match(\"darwin-$ARCH.zip$\"))) | .browser_download_url" | tr -d '"')
-      curl -LO "$DOWNLOAD_URL"
+      curl -O -L "https://github.com/grafana/agent/releases/download/v0.39.2/grafana-agent-darwin-$ARCH.zip"
       # extract the binary
       unzip "grafana-agent-darwin-$ARCH.zip"
       # make sure it is executable
@@ -209,9 +208,8 @@ if [ "$INSTALL" != false ]; then
   else
     if [ "$OS" = "Debian" ]; then
       if [ "$ARCH" != "unsupported" ]; then
-        DOWNLOAD_URL=$(curl -s https://api.github.com/repos/grafana/agent/releases/latest | jq '.assets[] | select((.name | test("flow")) and (.name | endswith("'"$ARCH.deb"'"))) | .browser_download_url' | tr -d '"')
-        curl -LO "$DOWNLOAD_URL"
-        dpkg -i "$(basename "$DOWNLOAD_URL")"
+        curl -O -L "https://github.com/grafana/agent/releases/download/v0.39.2/grafana-agent-flow-0.39.2-1.$ARCH.deb"
+        dpkg -i "grafana-agent-flow-0.39.2-1.$ARCH.deb"
       else
         echo "Architecture not supported"
         exit 1;
@@ -219,9 +217,8 @@ if [ "$INSTALL" != false ]; then
 
     elif [ "$OS" = "RedHat" ] || [ "$OS" = "SUSE" ]; then
       if [ "$ARCH" != "unsupported" ]; then
-        DOWNLOAD_URL=$(curl -s https://api.github.com/repos/grafana/agent/releases/latest | jq '.assets[] | select((.name | test("flow")) and (.name | endswith("'"$ARCH.rpm"'"))) | .browser_download_url' | tr -d '"')
-        curl -LO "$DOWNLOAD_URL"
-        rpm -i "$(basename "$DOWNLOAD_URL")"
+        curl -O -L "https://github.com/grafana/agent/releases/download/v0.39.2/grafana-agent-flow-0.39.2-1.$ARCH.rpm"
+        rpm -i "grafana-agent-flow-0.39.2-1.$ARCH.rpm"
         #change after config updated
       else
         echo "Architecture not supported"
@@ -231,12 +228,12 @@ if [ "$INSTALL" != false ]; then
       echo "OS not supported, downloading binary..."
       # Download the binary
       # Can't install jq if OS is unknown, therefore can't get latest binary
-      curl -O -L "https://github.com/grafana/agent/releases/download/v0.34.0/grafana-agent-flow-0.34.2-1.$ARCH.zip"
+      curl -O -L "https://github.com/grafana/agent/releases/download/v0.39.2/grafana-agent-flow-0.39.2-1.$ARCH.zip"
       # extract the binary
-      unzip "grafana-agent-flow-0.34.2-1.$ARCH.zip"
+      unzip "grafana-agent-flow-0.39.2-1.$ARCH.zip"
       # make sure it is executable
-      chmod a+x "grafana-agent-flow-0.34.2-1.$ARCH.zip"
-      binLocation="$(pwd)/grafana-agent-flow-0.34.2-1.$ARCH.zip"
+      chmod a+x "grafana-agent-flow-0.39.2-1.$ARCH.zip"
+      binLocation="$(pwd)/grafana-agent-flow-0.39.2-1.$ARCH.zip"
       # echo the location of the binary
       echo "Binary location: $binLocation"
       asBinary=true
@@ -359,14 +356,14 @@ while true; do
 
     # Add log collection
     cat <<EOF >> "$CONFIG"
-discovery.file "varlog" {
+local.file_match "varlog" {
   path_targets = [
     {__path__ = "$path", job = "$job"},
   ]
 }
 
 loki.source.file "httpd" {
-  targets    = discovery.file.varlog.targets
+  targets    = local.file_match.varlog.targets
   forward_to = [loki.write.lokiEndpoint.receiver]
 }
 
@@ -670,11 +667,12 @@ if { (ss -ltn | grep -qE :5672) || [ -n "${rabbitmq_scrape_target}" ]; } && [ "$
   if ! (ss -ltn | grep -qE :15692); then
     echo "RabbitMQ exporter is not enabled, see the Observability Agent docs to learn how to enable it"
   fi
+  instance_label=${rabbitmq_instance_label:=${rabbitmq_scrape_target:="127.0.0.1:15692"}}
   if [ -n "${rabbitmq_scrape_target}" ]; then
     cat <<EOF >> "$CONFIG"
 prometheus.scrape "rabbit" {
 targets = [
-  {"__address__" = "$rabbitmq_scrape_target", "instance" = "one"},
+  {"__address__" = "$rabbitmq_scrape_target", "instance" = "${instance_label}"},
 ]
 
 forward_to = [prometheus.remote_write.default.receiver]
@@ -685,7 +683,7 @@ EOF
     cat <<EOF >> "$CONFIG"
 prometheus.scrape "rabbit" {
 targets = [
-  {"__address__" = "127.0.0.1:15692", "instance" = "one"},
+  {"__address__" = "127.0.0.1:15692", "instance" = "${instance_label}"},
 ]
 
 forward_to = [prometheus.remote_write.default.receiver]
@@ -1040,6 +1038,8 @@ if [ "${asBinary}" = true ]; then
 elif [ "$PROMPT" != false ] || [ "${start_service}" = true ]; then
   mv $CONFIG /etc/grafana-agent-flow.river
   echo "Config file can be found at /etc/grafana-agent-flow.river"
+  systemctl enable grafana-agent-flow.service
+  echo "Grafana Agent Flow enabled"
   systemctl start grafana-agent-flow.service
   echo "Grafana Agent Flow started"
 fi

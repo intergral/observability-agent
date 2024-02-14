@@ -56,6 +56,8 @@ To modify a pre-existing config file, add `--config.file`, followed by the path 
 `sudo path/to/observability-agent-autoconf.sh --config.file path/to/configfile`  
 A backup of your original file will be created
 
+To disable prompts that wait for user input, add `--prompt false` as command arguments.
+
 You can use both `--install` and `--config.file` options in the same run command, order is irrelevant. For example: </br>
 `sudo path/to/observability-agent-autoconf.sh --install false --config.file path/to/config`</br>
 or </br>
@@ -82,28 +84,29 @@ To add integrations without being prompted for credentials, there are several en
 
 ### Metric Exporters
 
-| Variable                 | Type     | Description                                                       |
-|--------------------------|----------|-------------------------------------------------------------------|
-| `mysql_user`             | `string` | User for the local Mysql database                                 |
-| `mysql_password`         | `string` | Password for the local Mysql database                             |
-| `mysql_disabled`         | `bool`   | Enables/Disables the Mysql exporter (enabled by default)          |
-| `mssql_user`             | `string` | User for the local Mssql database                                 |
-| `mssql_password`         | `string` | Password for the local Mssql database                             |
-| `mssql_disabled`         | `bool`   | Enables/Disables the Mssql exporter (enabled by default)          |
-| `postgres_user`          | `string` | User for the local Postgres database                              |
-| `postgres_password`      | `string` | Password for the local Postgres database                          |
-| `postgres_disabled`      | `bool`   | Enables/Disables the Postgres exporter (enabled by default)       |
-| `rabbitmq_disabled`      | `bool`   | Enables/Disables the RabbitMQ exporter (enabled by default)       |
-| `redis_disabled`         | `bool`   | Enables/Disables the Redis exporter (enabled by default)          |
-| `elasticsearch_user`     | `string` | User for the Elastic search instance                              |
-| `elasticsearch_password` | `string` | Password for the Elastic search instance                          |
-| `elasticsearch_disabled` | `bool`   | Enables/Disables the Elastic search exporter (enabled by default) |
-| `mongodb_user`           | `string` | User for the local Mongo database                                 |
-| `mongodb_password`       | `string` | Password for the local Mongo database                             |
-| `mongodb_disabled`       | `bool`   | Enables/Disables the MongoDB exporter (enabled by default)        |
-| `oracledb_user`          | `string` | User for the local Oracle database                                |
-| `oracledb_password`      | `string` | Password for the local Oracle database                            |
-| `oracledb_disabled`      | `bool`   | Enables/Disables the OracleDB exporter (enabled by default)       |
+| Variable                  | Type     | Description                                                       |
+|---------------------------|----------|-------------------------------------------------------------------|
+| `mysql_user`              | `string` | User for the local Mysql database                                 |
+| `mysql_password`          | `string` | Password for the local Mysql database                             |
+| `mysql_disabled`          | `bool`   | Enables/Disables the Mysql exporter (enabled by default)          |
+| `mssql_user`              | `string` | User for the local Mssql database                                 |
+| `mssql_password`          | `string` | Password for the local Mssql database                             |
+| `mssql_disabled`          | `bool`   | Enables/Disables the Mssql exporter (enabled by default)          |
+| `postgres_user`           | `string` | User for the local Postgres database                              |
+| `postgres_password`       | `string` | Password for the local Postgres database                          |
+| `postgres_disabled`       | `bool`   | Enables/Disables the Postgres exporter (enabled by default)       |
+| `rabbitmq_disabled`       | `bool`   | Enables/Disables the RabbitMQ exporter (enabled by default)       |
+| `rabbitmq_instance_label` | `string` | Optional variable to set the RabbitMQ instance identifier         |
+| `redis_disabled`          | `bool`   | Enables/Disables the Redis exporter (enabled by default)          |
+| `elasticsearch_user`      | `string` | User for the Elastic search instance                              |
+| `elasticsearch_password`  | `string` | Password for the Elastic search instance                          |
+| `elasticsearch_disabled`  | `bool`   | Enables/Disables the Elastic search exporter (enabled by default) |
+| `mongodb_user`            | `string` | User for the local Mongo database                                 |
+| `mongodb_password`        | `string` | Password for the local Mongo database                             |
+| `mongodb_disabled`        | `bool`   | Enables/Disables the MongoDB exporter (enabled by default)        |
+| `oracledb_user`           | `string` | User for the local Oracle database                                |
+| `oracledb_password`       | `string` | Password for the local Oracle database                            |
+| `oracledb_disabled`       | `bool`   | Enables/Disables the OracleDB exporter (enabled by default)       |
 
 ### Exporting metrics from external machines
 

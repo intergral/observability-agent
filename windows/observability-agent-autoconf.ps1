@@ -24,6 +24,14 @@ while ($args) {
             $args = $args[2..$args.Count]
             break
         }
+        "--prompt" {
+            if ($args[1] -eq "false")
+            {
+                $PROMPT = $false
+            }
+            $args = $args[2..$args.Count]
+            break
+        }
         "--disable-dl-progress-bar" {
             if ($args[1] -eq "true")
             {
@@ -51,6 +59,7 @@ if ($INSTALL -ne $false) {
     $installPath = "$PSScriptRoot/grafana-agent-flow-installer.exe"
 
     # Download the file
+    Write-Output "Downloading agent installer"
     if ($DisableDownloadProgressBar -eq $true)
     {
         $ProgressPreference = 'SilentlyContinue'
@@ -58,10 +67,19 @@ if ($INSTALL -ne $false) {
     Invoke-WebRequest -Uri $url -OutFile $outputPath
 
     # Extract the contents of the zip file
+    Write-Output "Extracting agent installer"
     Expand-Archive -Path $outputPath -DestinationPath $installPath -Force
 
     # Run the installer
-    Start-Process "$installPath\grafana-agent-flow-installer.exe"
+    Write-Output "Running agent installer"
+    if ($PROMPT -eq $false)
+    {
+        Start-Process "$installPath\grafana-agent-flow-installer.exe" "/S"
+    }
+    else
+    {
+        Start-Process "$installPath\grafana-agent-flow-installer.exe"
+    }
 }
 
 #Check if an env file exists
@@ -122,13 +140,13 @@ logging {
   format = "logfmt"
 }
 
-"@ | Out-File -FilePath $CONFIG
+"@ | Out-File -FilePath $CONFIG -encoding utf8
 Write-Output "Prometheus remote write component enabled"
 
 # Enable windows exporter component
 @"
 prometheus.exporter.windows "example" {
-    enabled_collectors = "cpu,cs,logical_disk,net,os,service,system,textfile,iis"
+    enabled_collectors = ["cpu","cs","logical_disk","net","os","service","system","textfile","iis"]
 }
 
 prometheus.scrape "windows" {
@@ -136,7 +154,7 @@ prometheus.scrape "windows" {
 	forward_to = [prometheus.remote_write.default.receiver]
 }
 
-"@ | Out-File -FilePath $CONFIG -Append
+"@ | Out-File -FilePath $CONFIG -Append -encoding utf8
 Write-Output "Windows exporter component enabled"
 
 # Enable log exporter component
@@ -145,7 +163,7 @@ while ($true) {
     {
         $ans = Read-Host "Is there a service you want to enable log collection for? (y/n)" | ForEach-Object { $_.ToLower() }
     }
-    elseif ($env:log_collection = $true) {
+    elseif ($env:log_collection -eq $true) {
         $ans="y"
     }
     else
@@ -183,14 +201,14 @@ while ($true) {
 
         # Add log collection
         @"
-discovery.file "varlog" {
+local.file_match "varlog" {
   path_targets = [
     {__path__ = "$path", job = "$job"},
   ]
 }
 
 loki.source.file "httpd" {
-  targets    = discovery.file.varlog.targets
+  targets    = local.file_match.varlog.targets
   forward_to = [loki.write.lokiEndpoint.receiver]
 }
 
@@ -204,7 +222,7 @@ loki.write "lokiEndpoint" {
   }
 }
 
-"@ | Out-File -FilePath $CONFIG -Append
+"@ | Out-File -FilePath $CONFIG -Append -encoding utf8
         break
     } elseif ($ans -eq "n") {
         break
@@ -219,7 +237,7 @@ while ($true) {
     {
         $ans = Read-Host "Would you like to enable collection of open telemetry metrics and traces? (y/n)" | ForEach-Object { $_.ToLower() }
     }
-    elseif ($env:otel_collection = $true) {
+    elseif ($env:otel_collection -eq $true) {
         $ans="y"
     }
     else
@@ -259,7 +277,7 @@ otelcol.exporter.otlphttp "traceEndpoint" {
     }
 }
 
-"@ | Out-File -FilePath $CONFIG -Append
+"@ | Out-File -FilePath $CONFIG -Append -encoding utf8
         break
     } elseif ($ans -eq "n") {
         break
@@ -331,7 +349,7 @@ targets    = prometheus.exporter.mysql.example.targets
 forward_to = [prometheus.remote_write.default.receiver]
 }
 
-"@ | Out-File -FilePath $CONFIG -Append
+"@ | Out-File -FilePath $CONFIG -Append -encoding utf8
     Write-Output "MySQL integration enabled"
 }
 
@@ -396,7 +414,7 @@ targets    = prometheus.exporter.mssql.example.targets
 forward_to = [prometheus.remote_write.default.receiver]
 }
 
-"@ | Out-File -FilePath $CONFIG -Append
+"@ | Out-File -FilePath $CONFIG -Append -encoding utf8
     Write-Output "MSSQL integration enabled"
 }
 
@@ -465,7 +483,7 @@ targets    = prometheus.exporter.postgres.example.targets
 forward_to = [prometheus.remote_write.default.receiver]
 }
 
-"@ | Out-File -FilePath $CONFIG -Append
+"@ | Out-File -FilePath $CONFIG -Append -encoding utf8
     Write-Output "Postgres integration enabled"
 }
 
@@ -477,19 +495,31 @@ if (((Get-NetTCPConnection).LocalPort -contains 5672 -or $env:rabbitmq_scrape_ta
     {
         Write-Output "RabbitMQ exporter is not enabled, see the Observability Agent docs to learn how to enable it"
     }
+    if ($env:rabbitmq_instance_label)
+    {
+        $instance_label = $env:rabbitmq_instance_label
+    }
+    elseif ($env:rabbitmq_scrape_target)
+    {
+        $instance_label = $env:rabbitmq_scrape_target
+    }
+    else
+    {
+        $instance_label = "127.0.0.1:15692"
+    }
     if ($env:rabbitmq_scrape_target)
     {
     # Add the endpoint to the config
         @"
 prometheus.scrape "rabbit" {
 targets = [
-{"__address__" = "$rabbitmq_scrape_target", "instance" = "one"},
+{"__address__" = "$rabbitmq_scrape_target", "instance" = "$instance_label"},
 ]
 
 forward_to = [prometheus.remote_write.default.receiver]
 }
 
-"@ | Out-File -FilePath $CONFIG -Append
+"@ | Out-File -FilePath $CONFIG -Append -encoding utf8
     }
     else
     {
@@ -497,13 +527,13 @@ forward_to = [prometheus.remote_write.default.receiver]
         @"
 prometheus.scrape "rabbit" {
 targets = [
-{"__address__" = "127.0.0.1:15692", "instance" = "one"},
+{"__address__" = "127.0.0.1:15692", "instance" = "$instance_label"},
 ]
 
 forward_to = [prometheus.remote_write.default.receiver]
 }
 
-"@ | Out-File -FilePath $CONFIG -Append
+"@ | Out-File -FilePath $CONFIG -Append -encoding utf8
         Write-Output "RabbitMQ scrape endpoint added"
 }
 }
@@ -530,7 +560,7 @@ targets    = prometheus.exporter.redis.example.targets
 forward_to = [prometheus.remote_write.default.receiver]
 }
 
-"@ | Out-File -FilePath $CONFIG -Append
+"@ | Out-File -FilePath $CONFIG -Append -encoding utf8
     Write-Output "Redis integration enabled"
 }
 
@@ -556,7 +586,7 @@ targets    = prometheus.exporter.kafka.example.targets
 forward_to = [prometheus.remote_write.default.receiver]
 }
 
-"@ | Out-File -FilePath $CONFIG -Append
+"@ | Out-File -FilePath $CONFIG -Append -encoding utf8
     Write-Output "Kafka integration enabled"
 }
 
@@ -621,7 +651,7 @@ targets    = prometheus.exporter.elasticsearch.example.targets
 forward_to = [prometheus.remote_write.default.receiver]
 }
 
-"@ | Out-File -FilePath $CONFIG -Append
+"@ | Out-File -FilePath $CONFIG -Append -encoding utf8
     Write-Output "Elasticsearch integration enabled"
 }
 
@@ -686,7 +716,7 @@ targets    = prometheus.exporter.mongodb.example.targets
 forward_to = [prometheus.remote_write.default.receiver]
 }
 
-"@ | Out-File -FilePath $CONFIG -Append
+"@ | Out-File -FilePath $CONFIG -Append -encoding utf8
     Write-Output "MongoDB integration enabled"
 }
 
@@ -750,7 +780,7 @@ targets    = prometheus.exporter.oracledb.example.targets
 forward_to = [prometheus.remote_write.default.receiver]
 }
 
-"@ | Out-File -FilePath $CONFIG -Append
+"@ | Out-File -FilePath $CONFIG -Append -encoding utf8
     Write-Output "OracleDB integration enabled"
 }
 
@@ -760,30 +790,30 @@ if ($env:scrape_targets) {
     @"
 prometheus.scrape "endpoints" {
   targets = [
-"@ | Out-File -FilePath $CONFIG -Append
+"@ | Out-File -FilePath $CONFIG -Append -encoding utf8
 
     # Add the jobs and targets to the config
     for ($i=0; $i -lt $scrapeTargets.Length; $i++) {
         # Add the endpoint to the config
         @"
     {"__address__" = "${scrapeTargets[i]}"},
-"@ | Out-File -FilePath $CONFIG -Append
+"@ | Out-File -FilePath $CONFIG -Append -encoding utf8
     }
     @"
   ]
   forward_to = [prometheus.remote_write.default.receiver]
 }
 
-"@ | Out-File -FilePath $CONFIG -Append
+"@ | Out-File -FilePath $CONFIG -Append -encoding utf8
     Write-Host "Scrape endpoints added"
 }
 
-while ($true)
+while ($PROMPT -ne $false -and $true)
 {
     @"
 prometheus.scrape "endpoints" {
   targets = [
-"@ | Out-File -FilePath $CONFIG -Append
+"@ | Out-File -FilePath $CONFIG -Append -encoding utf8
 
     $ans = Read-Host "Is there an additional endpoint you would like to scrape? (y/n)" | ForEach-Object { $_.ToLower() }
     if ($ans -eq "y") {
@@ -798,7 +828,7 @@ prometheus.scrape "endpoints" {
             # Add the endpoint to the config
             @"
     {"__address__" = "$endpointTarget"},
-"@ | Out-File -FilePath $CONFIG -Append
+"@ | Out-File -FilePath $CONFIG -Append -encoding utf8
         }
     } elseif ($ans -eq "n") {
         @"
@@ -806,7 +836,7 @@ prometheus.scrape "endpoints" {
   forward_to = [prometheus.remote_write.default.receiver]
 }
 
-"@ | Out-File -FilePath $CONFIG -Append
+"@ | Out-File -FilePath $CONFIG -Append -encoding utf8
         break
     } else {
         Write-Output "Invalid input. Please enter y or n."
@@ -816,12 +846,23 @@ prometheus.scrape "endpoints" {
   forward_to = [prometheus.remote_write.default.receiver]
 }
 
-"@ | Out-File -FilePath $CONFIG -Append
+"@ | Out-File -FilePath $CONFIG -Append -encoding utf8
     break
 }
 Write-Output "Config file updated"
 
 Move-Item -Path $CONFIG -Destination "C:\Program Files\Grafana Agent Flow\config.river" -Force
 Write-Host "Config file can be found at C:\Program Files\Grafana Agent Flow\config.river"
+
+# Service might not be created yet if running script with `--prompt false`
+# This attempts to wait until the service can be restarted - there's probably a better way to do this
+Write-Output "Attempting to restart service"
+$attempts = 0
+while ($attempts -le 4 -and (Get-Service -Name "Grafana Agent Flow" -ErrorAction SilentlyContinue) -eq $null)
+{
+    $attempts += 1
+    Start-Sleep -Seconds 2
+}
+
 Restart-Service -Name "Grafana Agent Flow" -Force
 Write-Output "Grafana Agent Flow started"
