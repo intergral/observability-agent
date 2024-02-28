@@ -48,18 +48,14 @@ while ($args) {
 }
 
 if ($INSTALL -ne $false) {
-
-    $uri = "https://api.github.com/repos/grafana/agent/releases/latest"
-    $release = Invoke-RestMethod -Uri $uri
-
-    # Extract the download URL for the Windows installer from the release assets
-    $url = ($release.assets | Where-Object { $_.name -like "grafana-agent-flow-installer.exe.zip" }).browser_download_url
-
     $outputPath = "$PSScriptRoot/grafana-agent-flow-installer.exe.zip"
     $installPath = "$PSScriptRoot/grafana-agent-flow-installer.exe"
 
     # Download the file
     Write-Output "Downloading agent installer"
+
+    Invoke-WebRequest -Uri "https://github.com/grafana/agent/releases/download/v0.39.2/grafana-agent-flow-installer.exe.zip" -OutFile $outputPath
+
     if ($DisableDownloadProgressBar -eq $true)
     {
         $ProgressPreference = 'SilentlyContinue'
