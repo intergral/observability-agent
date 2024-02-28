@@ -643,7 +643,7 @@ if (((Get-NetTCPConnection).LocalPort -contains 9200 -or $env:elasticsearch_conn
     # Add integration
     @"
 prometheus.exporter.elasticsearch "example" {
-data_source_name = "$esDatasource"
+address = "$esDatasource"
 }
 
 prometheus.scrape "elasticsearch" {
