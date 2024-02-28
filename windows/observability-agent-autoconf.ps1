@@ -513,7 +513,7 @@ if (((Get-NetTCPConnection).LocalPort -contains 5672 -or $env:rabbitmq_scrape_ta
         @"
 prometheus.scrape "rabbit" {
 targets = [
-{"__address__" = "$rabbitmq_scrape_target", "instance" = "$instance_label"},
+{"__address__" = "$env:rabbitmq_scrape_target", "instance" = "$instance_label"},
 ]
 
 forward_to = [prometheus.remote_write.default.receiver]
