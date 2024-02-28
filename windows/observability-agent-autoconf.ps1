@@ -32,6 +32,14 @@ while ($args) {
             $args = $args[2..$args.Count]
             break
         }
+        "--disable-dl-progress-bar" {
+            if ($args[1] -eq "true")
+            {
+                $DisableDownloadProgressBar = $true
+            }
+            $args = $args[2..$args.Count]
+            break
+        }
         default {
             Write-Error "Invalid option: $($args[0])"
             exit 1
@@ -45,7 +53,14 @@ if ($INSTALL -ne $false) {
 
     # Download the file
     Write-Output "Downloading agent installer"
+
     Invoke-WebRequest -Uri "https://github.com/grafana/agent/releases/download/v0.39.2/grafana-agent-flow-installer.exe.zip" -OutFile $outputPath
+
+    if ($DisableDownloadProgressBar -eq $true)
+    {
+        $ProgressPreference = 'SilentlyContinue'
+    }
+    Invoke-WebRequest -Uri $url -OutFile $outputPath
 
     # Extract the contents of the zip file
     Write-Output "Extracting agent installer"
@@ -494,7 +509,7 @@ if (((Get-NetTCPConnection).LocalPort -contains 5672 -or $env:rabbitmq_scrape_ta
         @"
 prometheus.scrape "rabbit" {
 targets = [
-{"__address__" = "$rabbitmq_scrape_target", "instance" = "$instance_label"},
+{"__address__" = "$env:rabbitmq_scrape_target", "instance" = "$instance_label"},
 ]
 
 forward_to = [prometheus.remote_write.default.receiver]
@@ -624,7 +639,7 @@ if (((Get-NetTCPConnection).LocalPort -contains 9200 -or $env:elasticsearch_conn
     # Add integration
     @"
 prometheus.exporter.elasticsearch "example" {
-data_source_name = "$esDatasource"
+address = "$esDatasource"
 }
 
 prometheus.scrape "elasticsearch" {
