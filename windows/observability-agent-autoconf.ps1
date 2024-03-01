@@ -54,13 +54,11 @@ if ($INSTALL -ne $false) {
     # Download the file
     Write-Output "Downloading agent installer"
 
-    Invoke-WebRequest -Uri "https://github.com/grafana/agent/releases/download/v0.39.2/grafana-agent-flow-installer.exe.zip" -OutFile $outputPath
-
     if ($DisableDownloadProgressBar -eq $true)
     {
         $ProgressPreference = 'SilentlyContinue'
     }
-    Invoke-WebRequest -Uri $url -OutFile $outputPath
+    Invoke-WebRequest -Uri "https://github.com/grafana/agent/releases/download/v0.39.2/grafana-agent-flow-installer.exe.zip" -OutFile $outputPath
 
     # Extract the contents of the zip file
     Write-Output "Extracting agent installer"
