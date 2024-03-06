@@ -388,13 +388,13 @@ if (((Get-NetTCPConnection).LocalPort -contains 1433 -or $env:mssql_connection_s
                 }
             }
 
-            $msDatasource = "sqlserver://${user}:${passText}@1433:1433"
+            $msDatasource = "sqlserver://${user}:${passText}@127.0.0.1:1433"
 
         }
         else
         {
             Write-Output "MSSQL credentials found"
-            $msDatasource = "sqlserver://${env:mssql_user}:${env:mssql_password}@1433:1433"
+            $msDatasource = "sqlserver://${env:mssql_user}:${env:mssql_password}@127.0.0.1:1433"
         }
     } else {
         $msDatasource = $env:mssql_connection_string
