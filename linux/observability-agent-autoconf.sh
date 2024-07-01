@@ -208,8 +208,8 @@ if [ "$INSTALL" != false ]; then
   else
     if [ "$OS" = "Debian" ]; then
       if [ "$ARCH" != "unsupported" ]; then
-        curl -O -L "https://github.com/grafana/agent/releases/download/v0.39.2/grafana-agent-flow-0.39.2-1.$ARCH.deb"
-        dpkg -i "grafana-agent-flow-0.39.2-1.$ARCH.deb"
+        curl -O -L "https://github.com/grafana/alloy/releases/download/v1.2.0/alloy-1.2.0-1.$ARCH.deb"
+        dpkg -i "alloy-1.2.0-1.$ARCH.deb"
       else
         echo "Architecture not supported"
         exit 1;
