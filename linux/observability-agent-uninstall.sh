@@ -25,17 +25,17 @@ fi
 echo "$OS detected"
 
 
-echo "Uninstalling grafana-agent-flow"
+echo "Uninstalling alloy"
 systemctl stop grafana-agent-flow
 
 if [ "$OS" = "Debian" ]; then
-  apt-get -y remove grafana-agent-flow
+  apt-get -y remove alloy
   rm -i /etc/apt/sources.list.d/grafana.list
 elif [ "$OS" = "RedHat" ]; then
-  dnf -y remove grafana-agent-flow
+  dnf -y remove alloy
   rm -i /etc/yum.repos.d/rpm.grafana.repo
 elif [ "$OS" = "SUSE" ]; then
-  zypper remove -y grafana-agent-flow
+  zypper remove -y alloy
   zypper removerepo grafana
 fi
 systemctl daemon-reload
