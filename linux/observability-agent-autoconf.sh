@@ -78,7 +78,7 @@ else
 fi
 echo "$DISTRIBUTION detected"
 
-#Arch Detection
+# Arch Detection
 if [ "$(uname -m)" = "x86_64" ]; then
   ARCH=amd64
 elif [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then
@@ -90,6 +90,52 @@ elif [ "$(uname -m)" = "armv7l" ] || [ "$(uname -m)" = "armv7" ] && [ $OS != "ma
 else
   ARCH=unsupported
 fi
+
+# Remove old Grafana Agent Flow
+if systemctl list-units --type=service | grep -q grafana-agent-flow; then
+  while true; do
+    echo "grafana-agent-flow found. This service is no longer used in this version of the Observability Agent. Would you like to uninstall it? (y/n)"
+    read -r ans
+    ans=${ans,,}
+    if [ "$ans" = "y" ]; then
+      echo "Uninstalling grafana-agent-flow"
+      systemctl stop grafana-agent-flow
+      if [ "$OS" = "Debian" ]; then
+        apt-get -y remove grafana-agent-flow
+        rm -i /etc/apt/sources.list.d/grafana.list
+      elif [ "$OS" = "RedHat" ]; then
+        dnf -y remove grafana-agent-flow
+        rm -i /etc/yum.repos.d/rpm.grafana.repo
+      elif [ "$OS" = "SUSE" ]; then
+        zypper remove -y grafana-agent-flow
+        zypper removerepo grafana
+      fi
+      systemctl daemon-reload
+      echo "Uninstall Complete"
+      break
+    elif [ "$ans" = "n" ]; then
+      break
+    else
+      echo "Invalid input. Please enter y or n."
+    fi
+  done
+fi
+if
+echo "Uninstalling grafana-agent-flow"
+systemctl stop grafana-agent-flow
+
+if [ "$OS" = "Debian" ]; then
+  apt-get -y remove grafana-agent-flow
+  rm -i /etc/apt/sources.list.d/grafana.list
+elif [ "$OS" = "RedHat" ]; then
+  dnf -y remove grafana-agent-flow
+  rm -i /etc/yum.repos.d/rpm.grafana.repo
+elif [ "$OS" = "SUSE" ]; then
+  zypper remove -y grafana-agent-flow
+  zypper removerepo grafana
+fi
+systemctl daemon-reload
+echo "Uninstall Complete"
 
 # Bootstrap
 # Update the package manager
@@ -834,7 +880,7 @@ if { (ss -ltn | grep -qE :27017) || [ -n "${mongodb_connection_string}" ]; } && 
   echo "MongoDB detected"
   if [ -z "${mongodb_connection_string}" ]; then
     # Check if credentials already set in environment
-    if { [ -z "${mongo_user}" ] || [ -z "${mongo_password}" ]; } && [ "$PROMPT" != false ]; then
+    if { [ -z "${mongodb_user}" ] || [ -z "${mongodb_password}" ]; } && [ "$PROMPT" != false ]; then
       echo "MongoDB credentials not found"
 
       while true; do
@@ -1036,8 +1082,8 @@ if [ "${asBinary}" = true ]; then
 
 # If prompt flag is used, it's running in Docker (we don't need to move files or restart the agent for docker)
 elif [ "$PROMPT" != false ] || [ "${start_service}" = true ]; then
-  mv $CONFIG /etc/config.alloy
-  echo "Config file can be found at /etc/config.alloy"
+  mv $CONFIG /etc/alloy/config.alloy
+  echo "Config file can be found at /etc/alloy/config.alloy"
   systemctl enable alloy.service
   echo "Grafana Alloy enabled"
   systemctl start alloy.service
