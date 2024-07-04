@@ -92,50 +92,36 @@ else
 fi
 
 # Remove old Grafana Agent Flow
-if systemctl list-units --type=service | grep -q grafana-agent-flow; then
-  while true; do
-    echo "grafana-agent-flow found. This service is no longer used in this version of the Observability Agent. Would you like to uninstall it? (y/n)"
-    read -r ans
-    ans=${ans,,}
-    if [ "$ans" = "y" ]; then
-      echo "Uninstalling grafana-agent-flow"
-      systemctl stop grafana-agent-flow
-      if [ "$OS" = "Debian" ]; then
-        apt-get -y remove grafana-agent-flow
-        rm -i /etc/apt/sources.list.d/grafana.list
-      elif [ "$OS" = "RedHat" ]; then
-        dnf -y remove grafana-agent-flow
-        rm -i /etc/yum.repos.d/rpm.grafana.repo
-      elif [ "$OS" = "SUSE" ]; then
-        zypper remove -y grafana-agent-flow
-        zypper removerepo grafana
+if [ "$WARM" != true ]; then
+  if systemctl list-units --type=service | grep -q grafana-agent-flow; then
+    while true; do
+      echo "grafana-agent-flow found. This service is no longer used in this version of the Observability Agent. Would you like to uninstall it? (y/n)"
+      read -r ans
+      ans=${ans,,}
+      if [ "$ans" = "y" ]; then
+        echo "Uninstalling grafana-agent-flow"
+        systemctl stop grafana-agent-flow
+        if [ "$OS" = "Debian" ]; then
+          apt-get -y remove grafana-agent-flow
+          rm -i /etc/apt/sources.list.d/grafana.list
+        elif [ "$OS" = "RedHat" ]; then
+          dnf -y remove grafana-agent-flow
+          rm -i /etc/yum.repos.d/rpm.grafana.repo
+        elif [ "$OS" = "SUSE" ]; then
+          zypper remove -y grafana-agent-flow
+          zypper removerepo grafana
+        fi
+        systemctl daemon-reload
+        echo "Uninstall Complete"
+        break
+      elif [ "$ans" = "n" ]; then
+        break
+      else
+        echo "Invalid input. Please enter y or n."
       fi
-      systemctl daemon-reload
-      echo "Uninstall Complete"
-      break
-    elif [ "$ans" = "n" ]; then
-      break
-    else
-      echo "Invalid input. Please enter y or n."
-    fi
-  done
+    done
+  fi
 fi
-if
-echo "Uninstalling grafana-agent-flow"
-systemctl stop grafana-agent-flow
-
-if [ "$OS" = "Debian" ]; then
-  apt-get -y remove grafana-agent-flow
-  rm -i /etc/apt/sources.list.d/grafana.list
-elif [ "$OS" = "RedHat" ]; then
-  dnf -y remove grafana-agent-flow
-  rm -i /etc/yum.repos.d/rpm.grafana.repo
-elif [ "$OS" = "SUSE" ]; then
-  zypper remove -y grafana-agent-flow
-  zypper removerepo grafana
-fi
-systemctl daemon-reload
-echo "Uninstall Complete"
 
 # Bootstrap
 # Update the package manager
@@ -167,26 +153,6 @@ if ! which curl >/dev/null; then
     fi
 fi
 
-# Check if tar is installed
-if ! which tar >/dev/null; then
-    if [ "$OS" = "Debian" ]; then
-      echo "Installing tar..."
-      apt -y install tar
-    elif [ "$OS" = "RedHat" ]; then
-      echo "Installing tar..."
-      yum -y install tar
-    elif [ "$OS" = "SUSE" ]; then
-      echo "Installing tar..."
-      zypper install -y tar
-    elif [ "$OS" = "macOS" ]; then
-      echo "tar required"
-      exit 1
-    else
-      echo "OS not supported"
-      exit 1
-    fi
-fi
-
 # Check if iproute2 is installed (required for ss command)
 if ! which ss >/dev/null; then
     if [ "$OS" = "Debian" ]; then
@@ -200,26 +166,6 @@ if ! which ss >/dev/null; then
       zypper install -y iproute2
     elif [ "$OS" = "macOS" ]; then
       echo "iproute2mac required"
-      exit 1
-    else
-      echo "OS not supported"
-      exit 1
-    fi
-fi
-
-# Check if jq is installed
-if ! which jq >/dev/null; then
-    if [ "$OS" = "Debian" ]; then
-      echo "Installing jq..."
-      apt -y install jq
-    elif [ "$OS" = "RedHat" ]; then
-      echo "Installing jq..."
-      yum -y install jq
-    elif [ "$OS" = "SUSE" ]; then
-      echo "Installing jq..."
-      zypper install -y jq
-    elif [ "$OS" = "macOS" ]; then
-      echo "jq required"
       exit 1
     else
       echo "OS not supported"
