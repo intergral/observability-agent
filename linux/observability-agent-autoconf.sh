@@ -784,7 +784,7 @@ prometheus.exporter.elasticsearch "example" {
 }
 
 prometheus.scrape "elasticsearch" {
-  targets    = prometheus.exporter.mysql.example.targets
+  targets    = prometheus.exporter.elasticsearch.example.targets
   forward_to = [prometheus.remote_write.default.receiver]
 }
 
@@ -797,7 +797,7 @@ prometheus.exporter.elasticsearch "example" {
 }
 
 prometheus.scrape "elasticsearch" {
-  targets    = prometheus.exporter.mysql.example.targets
+  targets    = prometheus.exporter.elasticsearch.example.targets
   forward_to = [prometheus.remote_write.default.receiver]
 }
 
@@ -1030,8 +1030,9 @@ if [ "${asBinary}" = true ]; then
 elif [ "$PROMPT" != false ] || [ "${start_service}" = true ]; then
   mv $CONFIG /etc/alloy/config.alloy
   echo "Config file can be found at /etc/alloy/config.alloy"
+  # Configure Alloy to start at boot
   systemctl enable alloy.service
   echo "Grafana Alloy enabled"
-  systemctl start alloy.service
+  systemctl restart alloy.service
   echo "Grafana Alloy started"
 fi
