@@ -601,39 +601,45 @@ if { (ss -ltn | grep -qE :5432) || [ -n "${postgres_connection_string}" ]; } && 
           fi
       done
 
-      cat <<EOF >> "$CONFIG"
-prometheus.exporter.postgres "example" {
-    data_source_names = ["postgresql://$user:$pass@127.0.0.1:5432/postgres?sslmode=disable"]
-    autodiscovery {
-        enabled = true
-    }
-}
-
-prometheus.scrape "postgres" {
-  targets    = prometheus.exporter.postgres.example.targets
-  forward_to = [prometheus.remote_write.default.receiver]
-}
-
-EOF
     elif [ "${postgres_user}" ] && [ "${postgres_password}" ]; then
       echo "Postgres credentials found";
-      cat <<EOF >> "$CONFIG"
-prometheus.exporter.postgres "example" {
-    data_source_names = ["postgresql://$postgres_user:$postgres_password@127.0.0.1:5432/postgres?sslmode=disable"]
-    autodiscovery {
-        enabled = true
-    }
-}
+      user="$postgres_user"
+      pass="$postgres_password"
 
-prometheus.scrape "postgres" {
-  targets    = prometheus.exporter.postgres.example.targets
-  forward_to = [prometheus.remote_write.default.receiver]
-}
-
-EOF
     else
+      creds_invalid=true
       echo "Postgres credentials not found"
     fi
+
+    if [ "${postgres_db}" ]; then
+      db_name="$postgres_db"
+    else
+      echo "Enter database name or press enter to continue (defaults to username)"
+      read -r db_name
+      # Strip leading and trailing whitespace from db_name
+      db_name=$(echo "$db_name" | xargs)
+      if [ -z "$db_name" ]; then
+          db_name="$user"
+      fi
+    fi
+
+    if [ ! "$creds_invalid" ]; then
+    cat <<EOF >> "$CONFIG"
+    prometheus.exporter.postgres "example" {
+        data_source_names = ["postgresql://$user:$pass@127.0.0.1:5432/$db_name?sslmode=disable"]
+        autodiscovery {
+            enabled = true
+        }
+    }
+
+    prometheus.scrape "postgres" {
+      targets    = prometheus.exporter.postgres.example.targets
+      forward_to = [prometheus.remote_write.default.receiver]
+    }
+
+EOF
+    fi
+
   else
     cat <<EOF >> "$CONFIG"
 prometheus.exporter.postgres "example" {
