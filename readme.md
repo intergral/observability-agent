@@ -1,5 +1,5 @@
 ## Introduction
-The Observability Agent autoconfiguration and installer tool is a wrapper for the [Grafana Agent](https://github.com/grafana/agent) that can install the agent,
+The Observability Agent autoconfiguration and installer tool is a wrapper for [Grafana Alloy](https://github.com/grafana/alloy) that can install Alloy,
 detect which services are running on your machine, and automatically create a configuration file with integrations for
 detected services. A Node/Windows exporter integration will be added by default.
 
@@ -25,7 +25,7 @@ for must be running on its default port, these are:
 
 ## Procedure
 
-> **The [Static Mode](https://grafana.com/docs/agent/latest/static/) installer has been deprecated and superseded by the [Flow Mode](https://grafana.com/docs/agent/latest/flow/) installer** </br>
+> **Both the [Static Mode](https://grafana.com/docs/agent/latest/static/) installer and [Flow Mode](https://grafana.com/docs/agent/latest/flow/) installer have been deprecated and superseded by [Grafana Alloy](https://grafana.com/docs/alloy/latest/) installer** </br>
 
 > **[Latest Release](https://github.com/intergral/observability-agent/releases)** </br>
 
@@ -44,12 +44,12 @@ Invoke-WebRequest -Uri "https://github.com/intergral/observability-agent/release
 .\observability-agent-autoconf.ps1
 ```
 
-The installer for windows assumes you are installing the Grafana Agent in the default location on the C drive </br>
-This is required for the config file to be placed in the correct location for the Grafana Agent to read it
+The installer for windows assumes you are installing Grafana Alloy in the default location on the C drive </br>
+This is required for the config file to be placed in the correct location for the Grafana Alloy to read it
 
 ## Options
 
-Agent installation is enabled by default. To run without installing the agent, add `--install false` to the end of the run command. For example: </br>
+Grafana Alloy installation is enabled by default. To run without installing Alloy, add `--install false` to the end of the run command. For example: </br>
 `sudo path/to/observability-agent-autoconf.sh --install false`
 
 To modify a pre-existing config file, add `--config.file`, followed by the path to the file, to the end of the run command. For example:
