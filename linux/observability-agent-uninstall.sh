@@ -26,7 +26,7 @@ echo "$OS detected"
 
 
 echo "Uninstalling alloy"
-systemctl stop grafana-agent-flow
+systemctl stop alloy
 
 if [ "$OS" = "Debian" ]; then
   apt-get -y remove alloy
