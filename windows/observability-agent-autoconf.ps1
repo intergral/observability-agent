@@ -48,31 +48,31 @@ while ($args) {
 }
 
 if ($INSTALL -ne $false) {
-    $outputPath = "$PSScriptRoot/grafana-agent-flow-installer.exe.zip"
-    $installPath = "$PSScriptRoot/grafana-agent-flow-installer.exe"
+    $outputPath = "$PSScriptRoot/alloy-installer-windows-amd64.exe.zip"
+    $installPath = "$PSScriptRoot/alloy-installer-windows-amd64.exe"
 
     # Download the file
-    Write-Output "Downloading agent installer"
+    Write-Output "Downloading Grafana Alloy installer"
 
     if ($DisableDownloadProgressBar -eq $true)
     {
         $ProgressPreference = 'SilentlyContinue'
     }
-    Invoke-WebRequest -Uri "https://github.com/grafana/agent/releases/download/v0.39.2/grafana-agent-flow-installer.exe.zip" -OutFile $outputPath
+    Invoke-WebRequest -Uri "https://github.com/grafana/alloy/releases/download/v1.2.0/alloy-installer-windows-amd64.exe.zip" -OutFile $outputPath
 
     # Extract the contents of the zip file
-    Write-Output "Extracting agent installer"
+    Write-Output "Extracting Grafana Alloy installer"
     Expand-Archive -Path $outputPath -DestinationPath $installPath -Force
 
     # Run the installer
-    Write-Output "Running agent installer"
+    Write-Output "Running Grafana Alloy installer"
     if ($PROMPT -eq $false)
     {
-        Start-Process "$installPath\grafana-agent-flow-installer.exe" "/S"
+        Start-Process "$installPath\alloy-installer-windows-amd64.exe" "/S"
     }
     else
     {
-        Start-Process "$installPath\grafana-agent-flow-installer.exe"
+        Start-Process "$installPath\alloy-installer-windows-amd64.exe"
     }
 }
 
@@ -93,7 +93,7 @@ if (($CONFIG) -and (Test-Path $CONFIG -PathType Leaf)) {
     Copy-Item -Path "$CONFIG" -Destination "$CONFIG.bak" -Force -PassThru | Out-Null
 } else {
     Write-Output "No pre-existing config file found"
-    $CONFIG="grafana-agent-flow.river"
+    $CONFIG="config.alloy"
     Write-Output "Creating configuration file: $CONFIG"
 }
 
@@ -845,18 +845,18 @@ prometheus.scrape "endpoints" {
 }
 Write-Output "Config file updated"
 
-Move-Item -Path $CONFIG -Destination "C:\Program Files\Grafana Agent Flow\config.river" -Force
-Write-Host "Config file can be found at C:\Program Files\Grafana Agent Flow\config.river"
+Move-Item -Path $CONFIG -Destination "C:\Program Files\GrafanaLabs\Alloy\config.alloy" -Force
+Write-Host "Config file can be found at C:\Program Files\GrafanaLabs\Alloy\config.alloy"
 
 # Service might not be created yet if running script with `--prompt false`
 # This attempts to wait until the service can be restarted - there's probably a better way to do this
 Write-Output "Attempting to restart service"
 $attempts = 0
-while ($attempts -le 4 -and (Get-Service -Name "Grafana Agent Flow" -ErrorAction SilentlyContinue) -eq $null)
+while ($attempts -le 4 -and (Get-Service -Name "Alloy" -ErrorAction SilentlyContinue) -eq $null)
 {
     $attempts += 1
     Start-Sleep -Seconds 2
 }
 
-Restart-Service -Name "Grafana Agent Flow" -Force
-Write-Output "Grafana Agent Flow started"
+Restart-Service -Name "Alloy" -Force
+Write-Output "Grafana Alloy started"

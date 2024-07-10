@@ -78,7 +78,7 @@ else
 fi
 echo "$DISTRIBUTION detected"
 
-#Arch Detection
+# Arch Detection
 if [ "$(uname -m)" = "x86_64" ]; then
   ARCH=amd64
 elif [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then
@@ -89,6 +89,38 @@ elif [ "$(uname -m)" = "armv7l" ] || [ "$(uname -m)" = "armv7" ] && [ $OS != "ma
   ARCH=armv7
 else
   ARCH=unsupported
+fi
+
+# Remove old Grafana Agent Flow
+if [ "$WARM" != true ]; then
+  if systemctl list-units --type=service | grep -q grafana-agent-flow; then
+    while true; do
+      echo "grafana-agent-flow found. This service is no longer used in this version of the Observability Agent. Would you like to uninstall it? (y/n)"
+      read -r ans
+      ans=${ans,,}
+      if [ "$ans" = "y" ]; then
+        echo "Uninstalling grafana-agent-flow"
+        systemctl stop grafana-agent-flow
+        if [ "$OS" = "Debian" ]; then
+          apt-get -y remove grafana-agent-flow
+          rm -i /etc/apt/sources.list.d/grafana.list
+        elif [ "$OS" = "RedHat" ]; then
+          dnf -y remove grafana-agent-flow
+          rm -i /etc/yum.repos.d/rpm.grafana.repo
+        elif [ "$OS" = "SUSE" ]; then
+          zypper remove -y grafana-agent-flow
+          zypper removerepo grafana
+        fi
+        systemctl daemon-reload
+        echo "Uninstall Complete"
+        break
+      elif [ "$ans" = "n" ]; then
+        break
+      else
+        echo "Invalid input. Please enter y or n."
+      fi
+    done
+  fi
 fi
 
 # Bootstrap
@@ -121,26 +153,6 @@ if ! which curl >/dev/null; then
     fi
 fi
 
-# Check if tar is installed
-if ! which tar >/dev/null; then
-    if [ "$OS" = "Debian" ]; then
-      echo "Installing tar..."
-      apt -y install tar
-    elif [ "$OS" = "RedHat" ]; then
-      echo "Installing tar..."
-      yum -y install tar
-    elif [ "$OS" = "SUSE" ]; then
-      echo "Installing tar..."
-      zypper install -y tar
-    elif [ "$OS" = "macOS" ]; then
-      echo "tar required"
-      exit 1
-    else
-      echo "OS not supported"
-      exit 1
-    fi
-fi
-
 # Check if iproute2 is installed (required for ss command)
 if ! which ss >/dev/null; then
     if [ "$OS" = "Debian" ]; then
@@ -161,43 +173,23 @@ if ! which ss >/dev/null; then
     fi
 fi
 
-# Check if jq is installed
-if ! which jq >/dev/null; then
-    if [ "$OS" = "Debian" ]; then
-      echo "Installing jq..."
-      apt -y install jq
-    elif [ "$OS" = "RedHat" ]; then
-      echo "Installing jq..."
-      yum -y install jq
-    elif [ "$OS" = "SUSE" ]; then
-      echo "Installing jq..."
-      zypper install -y jq
-    elif [ "$OS" = "macOS" ]; then
-      echo "jq required"
-      exit 1
-    else
-      echo "OS not supported"
-      exit 1
-    fi
-fi
-
 if [ "$WARM" = true ]; then
   echo "Dependencies installed"
   exit 0
 fi
 
 if [ "$INSTALL" != false ]; then
-  echo "Installing Grafana Agent Flow..."
+  echo "Installing Grafana Alloy..."
   if [ "$OS" = "macOS" ]; then
     if [ "$ARCH" != "unsupported" ]; then
       echo "Downloading binary..."
       # download the binary
-      curl -O -L "https://github.com/grafana/agent/releases/download/v0.39.2/grafana-agent-darwin-$ARCH.zip"
+      curl -O -L "https://github.com/grafana/alloy/releases/download/v1.2.0/alloy-darwin-$ARCH.zip"
       # extract the binary
-      unzip "grafana-agent-darwin-$ARCH.zip"
+      unzip "alloy-darwin-$ARCH.zip"
       # make sure it is executable
-      chmod a+x "grafana-agent-darwin-$ARCH"
-      binLocation="$(pwd)/grafana-agent-darwin-$ARCH"
+      chmod a+x "alloy-darwin-$ARCH"
+      binLocation="$(pwd)/alloy-darwin-$ARCH"
       # echo the location of the binary
       echo "Binary location: $binLocation"
       asBinary=true
@@ -208,8 +200,8 @@ if [ "$INSTALL" != false ]; then
   else
     if [ "$OS" = "Debian" ]; then
       if [ "$ARCH" != "unsupported" ]; then
-        curl -O -L "https://github.com/grafana/agent/releases/download/v0.39.2/grafana-agent-flow-0.39.2-1.$ARCH.deb"
-        dpkg -i "grafana-agent-flow-0.39.2-1.$ARCH.deb"
+        curl -O -L "https://github.com/grafana/alloy/releases/download/v1.2.0/alloy-1.2.0-1.$ARCH.deb"
+        dpkg -i "alloy-1.2.0-1.$ARCH.deb"
       else
         echo "Architecture not supported"
         exit 1;
@@ -217,29 +209,29 @@ if [ "$INSTALL" != false ]; then
 
     elif [ "$OS" = "RedHat" ] || [ "$OS" = "SUSE" ]; then
       if [ "$ARCH" != "unsupported" ]; then
-        curl -O -L "https://github.com/grafana/agent/releases/download/v0.39.2/grafana-agent-flow-0.39.2-1.$ARCH.rpm"
-        rpm -i "grafana-agent-flow-0.39.2-1.$ARCH.rpm"
+        curl -O -L "https://github.com/grafana/alloy/releases/download/v1.2.0/alloy-1.2.0-1.$ARCH.rpm"
+        rpm -i "alloy-1.2.0-1.$ARCH.rpm"
         #change after config updated
       else
         echo "Architecture not supported"
         exit 1;
       fi
     else
-      echo "OS not supported, downloading binary..."
+      echo "OS not supported, downloading Linux binary..."
       # Download the binary
       # Can't install jq if OS is unknown, therefore can't get latest binary
-      curl -O -L "https://github.com/grafana/agent/releases/download/v0.39.2/grafana-agent-flow-0.39.2-1.$ARCH.zip"
+      curl -O -L "https://github.com/grafana/alloy/releases/download/v1.2.0/alloy-linux-$ARCH.zip"
       # extract the binary
-      unzip "grafana-agent-flow-0.39.2-1.$ARCH.zip"
+      unzip "alloy-linux-$ARCH.zip"
       # make sure it is executable
-      chmod a+x "grafana-agent-flow-0.39.2-1.$ARCH.zip"
-      binLocation="$(pwd)/grafana-agent-flow-0.39.2-1.$ARCH.zip"
+      chmod a+x "alloy-linux-$ARCH.zip"
+      binLocation="$(pwd)/alloy-linux-$ARCH.zip"
       # echo the location of the binary
       echo "Binary location: $binLocation"
       asBinary=true
     fi
   fi
-  echo "Grafana Agent Flow Installed"
+  echo "Grafana Alloy Installed"
 fi
 
 #Check if an env file exists and source it
@@ -255,7 +247,7 @@ if [ -n "$CONFIG" ]; then
   cp -bp "$CONFIG" "$CONFIG.bak"
 else
     echo "No pre-existing config file found"
-    CONFIG=grafana-agent-flow.river
+    CONFIG=config.alloy
     echo "Creating configuration file: $CONFIG"
 fi
 
@@ -609,39 +601,45 @@ if { (ss -ltn | grep -qE :5432) || [ -n "${postgres_connection_string}" ]; } && 
           fi
       done
 
-      cat <<EOF >> "$CONFIG"
-prometheus.exporter.postgres "example" {
-    data_source_names = ["postgresql://$user:$pass@127.0.0.1:5432/postgres?sslmode=disable"]
-    autodiscovery {
-        enabled = true
-    }
-}
-
-prometheus.scrape "postgres" {
-  targets    = prometheus.exporter.postgres.example.targets
-  forward_to = [prometheus.remote_write.default.receiver]
-}
-
-EOF
     elif [ "${postgres_user}" ] && [ "${postgres_password}" ]; then
       echo "Postgres credentials found";
-      cat <<EOF >> "$CONFIG"
-prometheus.exporter.postgres "example" {
-    data_source_names = ["postgresql://$postgres_user:$postgres_password@127.0.0.1:5432/postgres?sslmode=disable"]
-    autodiscovery {
-        enabled = true
-    }
-}
+      user="$postgres_user"
+      pass="$postgres_password"
 
-prometheus.scrape "postgres" {
-  targets    = prometheus.exporter.postgres.example.targets
-  forward_to = [prometheus.remote_write.default.receiver]
-}
-
-EOF
     else
+      creds_invalid=true
       echo "Postgres credentials not found"
     fi
+
+    if [ "${postgres_db}" ]; then
+      db_name="$postgres_db"
+    else
+      echo "Enter database name or press enter to continue (defaults to username)"
+      read -r db_name
+      # Strip leading and trailing whitespace from db_name
+      db_name=$(echo "$db_name" | xargs)
+      if [ -z "$db_name" ]; then
+          db_name="$user"
+      fi
+    fi
+
+    if [ ! "$creds_invalid" ]; then
+    cat <<EOF >> "$CONFIG"
+    prometheus.exporter.postgres "example" {
+        data_source_names = ["postgresql://$user:$pass@127.0.0.1:5432/$db_name?sslmode=disable"]
+        autodiscovery {
+            enabled = true
+        }
+    }
+
+    prometheus.scrape "postgres" {
+      targets    = prometheus.exporter.postgres.example.targets
+      forward_to = [prometheus.remote_write.default.receiver]
+    }
+
+EOF
+    fi
+
   else
     cat <<EOF >> "$CONFIG"
 prometheus.exporter.postgres "example" {
@@ -792,7 +790,7 @@ prometheus.exporter.elasticsearch "example" {
 }
 
 prometheus.scrape "elasticsearch" {
-  targets    = prometheus.exporter.mysql.example.targets
+  targets    = prometheus.exporter.elasticsearch.example.targets
   forward_to = [prometheus.remote_write.default.receiver]
 }
 
@@ -805,7 +803,7 @@ prometheus.exporter.elasticsearch "example" {
 }
 
 prometheus.scrape "elasticsearch" {
-  targets    = prometheus.exporter.mysql.example.targets
+  targets    = prometheus.exporter.elasticsearch.example.targets
   forward_to = [prometheus.remote_write.default.receiver]
 }
 
@@ -834,7 +832,7 @@ if { (ss -ltn | grep -qE :27017) || [ -n "${mongodb_connection_string}" ]; } && 
   echo "MongoDB detected"
   if [ -z "${mongodb_connection_string}" ]; then
     # Check if credentials already set in environment
-    if { [ -z "${mongo_user}" ] || [ -z "${mongo_password}" ]; } && [ "$PROMPT" != false ]; then
+    if { [ -z "${mongodb_user}" ] || [ -z "${mongodb_password}" ]; } && [ "$PROMPT" != false ]; then
       echo "MongoDB credentials not found"
 
       while true; do
@@ -1031,15 +1029,16 @@ fi
 echo "Config file updated";
 
 if [ "${asBinary}" = true ]; then
-  echo "The Grafana agent was downloaded as a binary so it will have to be started manually"
+  echo "Grafana Alloy was downloaded as a binary so it will have to be started manually"
   echo "To run the binary, run: $binLocation --config.file $CONFIG"
 
 # If prompt flag is used, it's running in Docker (we don't need to move files or restart the agent for docker)
 elif [ "$PROMPT" != false ] || [ "${start_service}" = true ]; then
-  mv $CONFIG /etc/grafana-agent-flow.river
-  echo "Config file can be found at /etc/grafana-agent-flow.river"
-  systemctl enable grafana-agent-flow.service
-  echo "Grafana Agent Flow enabled"
-  systemctl start grafana-agent-flow.service
-  echo "Grafana Agent Flow started"
+  mv $CONFIG /etc/alloy/config.alloy
+  echo "Config file can be found at /etc/alloy/config.alloy"
+  # Configure Alloy to start at boot
+  systemctl enable alloy.service
+  echo "Grafana Alloy enabled"
+  systemctl restart alloy.service
+  echo "Grafana Alloy started"
 fi
