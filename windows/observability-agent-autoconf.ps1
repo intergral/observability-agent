@@ -48,8 +48,8 @@ while ($args) {
 }
 
 if ($INSTALL -ne $false) {
-    $outputPath = "$PSScriptRoot/alloy-installer-amd64.exe.zip"
-    $installPath = "$PSScriptRoot/alloy-installer-amd64.exe"
+    $outputPath = "$PSScriptRoot/alloy-installer-windows-amd64.exe.zip"
+    $installPath = "$PSScriptRoot/alloy-installer-windows-amd64.exe"
 
     # Download the file
     Write-Output "Downloading Grafana Alloy installer"
@@ -58,7 +58,7 @@ if ($INSTALL -ne $false) {
     {
         $ProgressPreference = 'SilentlyContinue'
     }
-    Invoke-WebRequest -Uri "https://github.com/grafana/alloy/releases/tag/v1.2.0/alloy-installer-amd64.exe.zip" -OutFile $outputPath
+    Invoke-WebRequest -Uri "https://github.com/grafana/alloy/releases/download/v1.2.0/alloy-installer-windows-amd64.exe.zip" -OutFile $outputPath
 
     # Extract the contents of the zip file
     Write-Output "Extracting Grafana Alloy installer"
@@ -68,11 +68,11 @@ if ($INSTALL -ne $false) {
     Write-Output "Running Grafana Alloy installer"
     if ($PROMPT -eq $false)
     {
-        Start-Process "$installPath\alloy-installer-amd64.exe" "/S"
+        Start-Process "$installPath\alloy-installer-windows-amd64.exe" "/S"
     }
     else
     {
-        Start-Process "$installPath\alloy-installer-amd64.exe.exe"
+        Start-Process "$installPath\alloy-installer-windows-amd64.exe"
     }
 }
 
@@ -845,8 +845,8 @@ prometheus.scrape "endpoints" {
 }
 Write-Output "Config file updated"
 
-Move-Item -Path $CONFIG -Destination "C:\Program Files\Alloy\config.alloy" -Force
-Write-Host "Config file can be found at C:\Program Files\Alloy\config.alloy"
+Move-Item -Path $CONFIG -Destination "C:\Program Files\GrafanaLabs\Alloy\config.alloy" -Force
+Write-Host "Config file can be found at C:\Program Files\GrafanaLabs\Alloy\config.alloy"
 
 # Service might not be created yet if running script with `--prompt false`
 # This attempts to wait until the service can be restarted - there's probably a better way to do this
