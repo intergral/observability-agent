@@ -397,9 +397,13 @@ otelcol.receiver.otlp "default" {
     http {
         endpoint = "0.0.0.0:4318"
     }
+    grpc {
+            endpoint = "0.0.0.0:4317"
+    }
     output {
            metrics = [otelcol.exporter.prometheus.default.input]
            traces = [otelcol.processor.batch.default.input]
+           logs = [otelcol.exporter.loki.default.input]
     }
 }
 
@@ -419,6 +423,19 @@ otelcol.exporter.otlphttp "traceEndpoint" {
         endpoint = "https://api.fusionreactor.io"
         headers = {authorization = "$key"}
         compression = "none"
+    }
+}
+
+otelcol.exporter.loki "default" {
+    forward_to = [loki.write.lokiEndpoint.receiver]
+}
+
+loki.write "lokiEndpoint"{
+    endpoint {
+        url = "https://api.fusionreactor.io/v1/logs"
+        basic_auth {
+            password = "$key"
+        }
     }
 }
 

@@ -144,7 +144,7 @@ If you wish to enable Open Telemetry metrics and traces, the following environme
 
 | Variable          | Type     | Example | Description                                     |
 |-------------------|----------|---------|-------------------------------------------------|
-| `otel_collection` | `bool`   | `true`  | Enables Open Telemetry metrics and traces       |
+| `otel_collection` | `bool`   | `true`  | Enables Open Telemetry metrics, traces and logs |
 
 ### Scraping from additional exporters
 At present, there are some integrations we don't support out the box. Use of these integrations is via a scrape endpoint.
