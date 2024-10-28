@@ -130,7 +130,7 @@ prometheus.remote_write "default" {
 }
 
 logging {
-  level  = "debug"
+  level  = "$($env:log_level -eq $null ? 'warn' : $env:log_level)"
   format = "logfmt"
 }
 
@@ -246,9 +246,13 @@ otelcol.receiver.otlp "default" {
     http {
         endpoint = "0.0.0.0:4318"
     }
+    grpc {
+        endpoint = "0.0.0.0:4317"
+    }
     output {
-           metrics = [otelcol.exporter.prometheus.default.input]
-           traces = [otelcol.processor.batch.default.input]
+        metrics = [otelcol.exporter.prometheus.default.input]
+        traces = [otelcol.processor.batch.default.input]
+        logs = [otelcol.exporter.loki.default.input]
     }
 }
 
@@ -269,6 +273,10 @@ otelcol.exporter.otlphttp "traceEndpoint" {
         headers = {authorization = "$key"}
         compression = "none"
     }
+}
+
+otelcol.exporter.loki "default" {
+    forward_to = [loki.write.lokiEndpoint.receiver]
 }
 
 "@ | Out-File -FilePath $CONFIG -Append -encoding utf8
@@ -656,7 +664,7 @@ if (((Get-NetTCPConnection).LocalPort -contains 27017 -or $env:mongodb_connectio
     if (-not $env:mongodb_connection_string)
     {
         # Check if credentials already set in environment
-        if (-not $env:mongo_user -or -not $env:mongo_password)
+        if (-not $env:mongodb_user -or -not $env:mongodb_password)
         {
             Write-Host "MongoDB credentials not found"
             while ($true)
@@ -693,7 +701,7 @@ if (((Get-NetTCPConnection).LocalPort -contains 27017 -or $env:mongodb_connectio
         else
         {
             Write-Output "MongoDB credentials found"
-            $mongoDatasource = "mongodb://${env:mongo_user}:${env:mongo_password}@127.0.0.1:27017/"
+            $mongoDatasource = "mongodb://${env:mongodb_user}:${env:mongodb_password}@127.0.0.1:27017/"
         }
     } else {
         $mongoDatasource = $env:mongodb_connection_string
