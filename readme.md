@@ -76,11 +76,12 @@ To add integrations without being prompted for credentials, there are several en
 
 ### Ingest
 
-| Variable           | Type     | Description                                                    |
-|--------------------|----------|----------------------------------------------------------------|
-| `api_key`          | `string` | API Key to authenticate with your FusionReactor Cloud Account  |
-| `metrics_Endpoint` | `string` | Default: `https://api.fusionreactor.io/v1/metrics`             |
-| `logs_Endpoint`    | `string` | Default: `https://api.fusionreactor.io/v1/logs`                |
+| Variable           | Type     | Description                                                                          |
+|--------------------|----------|--------------------------------------------------------------------------------------|
+| `api_key`          | `string` | API Key to authenticate with your FusionReactor Cloud Account                        |
+| `metrics_Endpoint` | `string` | Default: `https://api.fusionreactor.io/v1/metrics`                                   |
+| `logs_Endpoint`    | `string` | Default: `https://api.fusionreactor.io/v1/logs`                                      |
+| `log_level`        | `string` | Sets the log level. Valid values: "error", "warn", "info", "debug". Default: "warn"  | 
 
 ### Metric Exporters
 

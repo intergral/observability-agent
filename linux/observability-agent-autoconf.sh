@@ -288,7 +288,7 @@ prometheus.remote_write "default" {
 }
 
 logging {
-  level  = "debug"
+  level  = "${log_level:-warn}"
   format = "logfmt"
 }
 
